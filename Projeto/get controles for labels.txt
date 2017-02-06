@@ -1,0 +1,12 @@
+SELECT L.label, L.labelEnd, E.caf AS 'Series', C.evento_tipo_id, ET.nome, C.inicio AS 'Inicio', C.fim AS 'Fim', SUM(
+	IF (C.fim IS NULL, timestampdiff(SECOND, C.inicio, L.labelEnd),
+	IF (C.inicio BETWEEN L.label AND L.labelEnd AND C.fim BETWEEN L.label AND L.labelEnd, C.duracao,
+	IF (C.inicio BETWEEN L.label AND L.labelEnd, timestampdiff(SECOND, C.inicio, L.labelEnd),
+	IF (C.fim BETWEEN L.label AND L.labelEnd, timestampdiff(SECOND, L.label, C.fim), 0))))) AS 'Duracao'
+FROM controle C
+INNER JOIN equipamentos E ON E.radio = C.equipamentos_radio
+INNER JOIN evento_tipo ET ON C.evento_tipo_id = ET.id
+LEFT JOIN (SELECT '2017-01-03 00:00:00' AS 'label', '2017-01-03 23:59:59' AS 'labelEnd' UNION ALL SELECT '2017-01-04 00:00:00', '2017-01-04 23:59:59' UNION ALL SELECT '2017-01-14 00:00:00', '2017-01-14 23:59:59') L ON C.inicio BETWEEN L.label AND L.labelEnd OR C.fim BETWEEN L.label AND L.labelEnd
+WHERE E.caf IN ('CAF051500032') AND C.evento_tipo_id != 10 AND (C.inicio BETWEEN L.label AND L.labelEnd OR C.fim BETWEEN L.label AND L.labelEnd)
+GROUP BY 1, 3, 4
+ORDER BY 1 ASC

@@ -1,0 +1,250 @@
+/* Greenhouse */
+
+.no_search {
+	margin-bottom: 20px;
+}
+
+.popup, .modal-dialog {
+	display: none;
+	position: fixed;
+	width: 50%;
+	margin-left: 25%;
+	top: 0;
+	left: 0;
+}
+
+.popup {
+	z-index: 5000 !important;
+}
+
+.modal-dialog {
+	display: block !important;
+}
+
+.nav-tabs li a {
+	font-size: 16px;
+	font-weight: 400;
+	color: #73879C !important;
+}
+
+.hide {
+	display: none !important;
+}
+
+.modal-body, .modal-body p {
+	font-size: 14px;
+	margin: 10px 0;
+}
+
+.modal-footer button {
+	margin: 0;
+}
+
+.modal-footer input[type = "button"] {
+	margin-bottom: 0 !important;
+}
+
+div.dataTables_wrapper div.dataTables_length label, div.dataTables_wrapper div.dataTables_filter label {
+	font-weight: normal;
+	text-align: left;
+	white-space: nowrap;
+}
+
+div.dataTables_length label select {
+	height: 30px;
+	line-height: 30px;
+	padding: 5px 10px;
+	font-size: 12px;
+}
+
+div.dataTables_filter label input {
+	margin-left: 0.5em;
+	display: inline-block;
+	width: auto;
+	height: 30px;
+	padding: 5px 10px;
+	font-size: 12px;
+	line-height: 1.5;
+	box-shadow: inset 0 1px 1px rgba(0,0,0,.075);
+	transition: border-color ease-in-out .15s,box-shadow ease-in-out .15s;
+	border: 1px solid #ccc;
+}
+
+.btn-excluir, .btn-alterar {
+	margin: 0;
+	padding: 7px 10px 3px 10px;
+}
+
+.em_uso_toggle, .estado_toggle {
+	text-transform: uppercase;
+	text-align: center;
+	line-height: 22px;
+	color: #eee;
+	font-size: 16px;
+}
+
+.em_uso_toggle:hover, .estado_toggle {
+	cursor: pointer;
+}
+
+.usando {
+	background-color: #65b25c;
+	border-color: #388030;
+}
+
+.usando:hover {
+	background-color: #55a24c;
+	border-color: #287020;
+}
+
+.usando:active {
+	background-color: #45923c;
+	border-color: #186010;
+}
+
+.nao_usando {
+	background-color: #e06456;
+	border-color: #bf655b;
+}
+
+.nao_usando:hover {
+	background-color: #d05446;
+	border-color: #af554b;
+}
+
+.nao_usando:active {
+	background-color: #c04436;
+	border-color: #9f453b;
+}
+
+.noselect, .em_uso_toggle, canvas {
+	-webkit-touch-callout: none;
+	-webkit-user-select: none;
+	-khtml-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+}
+
+.uso-td {
+	text-transform: uppercase;
+	text-align: center;
+	color: #eee !important;
+}
+
+.usando-td {
+	background-color: #65b25c;
+	/*border-color: #388030 !important;*/
+}
+
+.nao_usando-td {
+	background-color: #e06456;
+	/*border-color: #bf655b !important;*/
+}
+
+.table tbody tr td {
+	vertical-align: middle;
+}
+
+.action {
+	width: 80px !important;
+	text-align: center;
+}
+
+select {
+	width: 100%;
+	display: inline-block;
+	height: 34px;
+	line-height: 34px;
+	padding: 5px 10px;
+	font-size: 14px;
+}
+
+.bold-label {
+	font-size: 17px;
+	font-weight: 700;
+	line-height: 34px;
+}
+
+.normal-label {
+	font-size: 17px;
+	font-weight: normal;
+	line-height: 34px;
+}
+
+/* /Greenhouse */
+
+/* FCA */
+ul.series_list {
+	text-transform: uppercase;
+	max-height: 200px;
+	padding: 0px 14px 0px 0px;
+	overflow: hidden;
+	margin-bottom: 3px;
+}
+
+.axis {
+	font-size: 14px;
+	padding: 0px 7px;
+	font-weight: normal;
+	color: rgb(115, 135, 156) !important;
+}
+
+.graph-sets {
+	min-height: 439px;
+	width: 100%;
+}
+
+.graph-title {
+	color: #73879C;
+	font-size: 14px;
+	text-align: center;
+	font-weight: 700;
+}
+
+.export {
+	margin-top: 10px;
+	display: inline-block;
+	text-align: center;
+}
+
+.export i {
+	margin-right: 5px;
+}
+
+.graph-row {
+	margin-bottom: 15px;
+}
+
+.main_container {
+	background-color: rgb(247, 247, 247);
+}
+
+.graph-sets div div {
+	line-height: 17px !important;
+}
+
+.small-search {
+	width: 40% !important;
+    float: right !important;
+}
+
+@media print {
+	* {
+		visibility: hidden;
+		position: absolute;
+	}
+
+	.left_col {
+		display: none;
+	}
+
+	.graph-row {
+		position: relative;
+	}
+
+	.graph-sets, .graph-sets * {
+		visibility: visible !important;
+		position: relative !important;
+	}
+}

@@ -1,0 +1,68 @@
+#DEFINE Title = o que está sendo analisado.
+#DEFINE Labels = eixo X do gráfico. O que está sendo analisado.
+#DEFINE Values = eixo Y do gráfico. Os valores de cada label ou do título.
+#DEFINE Series = item a ser analisado a partir de um grupo de valores para cada label ou um valor para o título.
+#DEFINE Range = cláusula WHERE. A condição de seleção dos dados.
+
+#DEFINE Gráfico_MultiSV (Title, []Series, []Labels, []Values, [Range = TRUE]) {
+	* Area Graph,
+	* Bar Graph,
+	* Line Graph,
+	* Radar Graph,
+	* EChart Area,
+	* EChart Bar,
+	* EChart Line,
+	* EChart Scatter,
+	* EChart Sonar,
+	* Morris Area,
+	* Morris Bar,
+	* Morris Line
+}
+
+#DEFINE Gráfico_MultiS ([]Series, Title, Value, [Range = TRUE]) {
+	* Donut graph,
+	* Pie graph,
+	* Pie area graph (Polar area),
+	* EChart Funnel,
+	* EChart Pie,
+	* EChart Pie Area,
+	* EChart Donut,
+	* EChart Mini Pie,
+	* EChart Guage,
+	* Morris Donut
+}
+
+#DEFINE Gráfico_Simples (Series, Title, Value, Range) {
+	* Easy Pie,
+	* Guage,
+	* Bootstrap Progress Bar
+}
+
+#EXEMPLOS#
+Gráfico 1:
+Tipo = Gráfico_MultiSV;
+Title = Produção vs. Perdas por Equipamento;
+[]Series = Produção e Perdas;
+[]Labels = []Equipamentos.CAF;
+[]Values = [ CAF.produção, CAF.perdas ].
+
+Gráfico 2:
+Tipo = Gráfico_MultiS;
+[]Series = []Equipamentos.CAF;
+Title = Produção;
+Value = CAF.produção.
+
+Gráfico 3:
+Tipo = Gráfico_MultiSV;
+Title = Produção Semanal por Equipamento;
+[]Series = []Equipamentos.CAF;
+[]Labels = Dias;
+[]Values = CAF.produção;
+Range = Last week.
+
+Gráfico 4:
+Tipo = Gráfico_Simples;
+Série = Equipamento.CAF;
+Title = Produção do Dia (%);
+Value = (CAF.produção / CAF.produção_esperada) * 100;
+Range = Today.
