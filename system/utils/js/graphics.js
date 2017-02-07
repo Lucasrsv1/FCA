@@ -1,3 +1,8 @@
+// Usefull method for strings. Changes the substring specified by @start and @end for @replacement
+String.prototype.replaceSection = function (start, end, replacement) {
+	return this.substr(0, start) + replacement + this.substr(end);
+}
+
 // LRV Graph System theme.
 var colorsTheme = [
 	[	"rgba(38, 185, 152, A)", // 0, 0
@@ -871,7 +876,7 @@ function PopulateObjectSeries(items, itemsLabels, itemsPrefix, jointLabel) {
 
 // After create all li options and series for the graph, call this function to update
 // the graph when the configurations change and a series is selected/unselected.
-function SetGraphUpdateTrigger() {
+function SetGraphUpdateTrigger () {
 	"use strict";
 	$('ul.series_list .iCheck-helper, .graph-option .iCheck-helper').click(function () {
 		var input = $(this).prev('input');
@@ -911,6 +916,33 @@ function SetGraphUpdateTrigger() {
 
 		$('#graph-row' + id).find('.series_list.not-hide').addClass('hide').removeClass('not-hide');
 		$('#graph-row' + id).find(selected + '_list').removeClass('hide').addClass('not-hide');
+		$('#graph-row' + id + ' .small-search').trigger('keyup');
+	});
+
+	$('.small-search').keyup(function () {
+		var search = $(this).val().toUpperCase();
+		console.log(search);
+		var id = $(this).parents('.graph-row').attr('id').substr(9);
+		var serie = SeriesPrefix(id);
+		serie = (serie[0] !== '.') ? '.' + serie : serie;
+		
+		var lis = $('#graph-row' + id + ' ' + serie + '_list li');
+		var title = "", s = -1, e = -1;
+		for (var i = 0; i < lis.length; i++){
+			if (lis.eq(i).text().toUpperCase().indexOf(search) !== -1) {
+				lis.eq(i).removeClass('hide');
+				continue;
+			}
+			
+			title = "\n" + lis.eq(i).attr('title').toUpperCase();
+			while ((s = title.indexOf('\n')) >= 0 && (e = title.indexOf(': ')) >= 0)
+				title = title.replaceSection(s, e + 2, "");
+			
+			if (title.indexOf(search) !== -1)
+				lis.eq(i).removeClass('hide');
+			else
+				lis.eq(i).addClass('hide');
+		}
 	});
 }
 

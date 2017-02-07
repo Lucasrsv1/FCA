@@ -1,8 +1,4 @@
-﻿String.prototype.replaceSection = function (start, end, replacement) {
-	return this.substr(0, start) + replacement + this.substr(end);
-}
-
-function DownloadURI(uri, name) {
+﻿function DownloadURI(uri, name) {
 	var link = document.createElement("a");
 	link.download = name;
 	link.href = uri;

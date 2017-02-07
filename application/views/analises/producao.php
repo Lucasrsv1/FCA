@@ -1,37 +1,6 @@
 ﻿<div>
     <!-- LRV Graphics -->
-	<script src="<?php echo base_url("system/utils/js/graphics.js");
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-?>"></script>
+	<script src="<?php echo base_url("system/utils/js/graphics.js");?>"></script>
 	
 	<div class="page-title">
 		<div class="title_left no_search">
@@ -179,6 +148,7 @@
 			<div class="col-md-3 col-sm-4 col-xs-12 bg-white">
 				<div class="x_title">
 					<h2>Equipamentos</h2>
+					<input class="form-control col-xs-5 small-search" name="search" type="text" placeholder="Pesquisa" />
 					<div class="clearfix"></div>
 				</div>
 				
@@ -211,6 +181,10 @@
 					<p> <input type="checkbox" class="flat" checked /> Usar apenas pontos com dados. </p>
 				</div>
 				
+				<div class="col-md-12 col-sm-12 col-xs-6 includeControl graph-option">
+					<p> <input type="checkbox" class="flat" checked /> Incluir problemas de produção. </p>
+				</div>
+				
 				<div class="col-md-12 col-sm-12 col-xs-6 echartsY graph-option">
 					<p> <input type="checkbox" class="flat" checked /> Mostrar régua do eixo Y (EChartss). </p>
 				</div>
@@ -231,35 +205,5 @@
     	
 	<!-- Produção Scripts -->
 	<script src="<?php echo base_url("system/utils/js/producao.js");
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ?>"></script>
 </div>

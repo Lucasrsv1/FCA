@@ -239,7 +239,7 @@
 							secondaryData = null;
 						}
 
-						// Handle secondary data						
+						// Handle secondary data
 						var serie, lab;
 						for (var row = 0; row < queryResult.length; row++) {
 							serie = queryResult[row]['Series'];
@@ -258,7 +258,7 @@
 							});
 						}
 
-						RenderGraphicMultiSeriesAndValues(graphicNum, title, series, categoriesBR, values, type, prefix, xLabelAngle, echartsY, secondaryData);
+						RenderGraphicMultiSeriesAndValues(graphicNum, title, (objectSeries.length > 0) ? objectSeries : series, categoriesBR, values, type, prefix, xLabelAngle, echartsY, secondaryData);
 					},
 					error: function (data) {
 						$("#msg_erro").html("Falha ao recuperar os dados secundários da análise!<br />Problema de comunicação com o banco de dados.");
