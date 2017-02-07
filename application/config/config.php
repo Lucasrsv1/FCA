@@ -24,7 +24,7 @@
 */
 
 // $config['base_url'] = 'http://lrvpc.ddns.net/FCA/';
-$config['base_url'] = 'http://192.168.2.6/FCA/';
+$config['base_url'] = 'http://192.168.2.3/FCA/';
 
 /*
 |--------------------------------------------------------------------------

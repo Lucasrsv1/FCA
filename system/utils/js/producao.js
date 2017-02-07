@@ -1,5 +1,8 @@
-function CreateGraphic(graphicNum) {
+function CreateGraphic (graphicNum) {
 	"use strict";
+
+	// Spin loading indicator
+	$('#graph-row' + graphicNum + ' .refresh').addClass('fa-spin');
 
 	// Get Date Group
 	var dateGroup = $('#graph-row' + graphicNum + ' .category').val() * 1;
@@ -58,6 +61,7 @@ function CreateGraphic(graphicNum) {
 	// Without Series, without graphic.
 	if (series.length === 0) {
 		ClearGraphicArea(graphicNum);
+		$('#graph-row' + graphicNum + ' .refresh').removeClass('fa-spin');
 		return;
 	}
 
@@ -121,6 +125,7 @@ function CreateGraphic(graphicNum) {
 				$('html, body').animate({ scrollTop: 0 }, 'slow');
 				return;
 			} else if (queryResult === "errorP") {
+				$('#graph-row' + graphicNum + ' .refresh').removeClass('fa-spin');
 				$("#msg_erro").html("Falha ao recuperar os dados da análise!<br />Verifique as configurações, series e datas selicionadas.");
 				$('#erro').fadeIn('slow').addClass('open-message');
 				$('html, body').animate({ scrollTop: 0 }, 'slow');
@@ -149,6 +154,11 @@ function CreateGraphic(graphicNum) {
 					} else {
 						for (var p in objSeries) {
 							if (objSeries[p].indexOf(queryResult[row]['Series']) !== -1) {
+								if (!values[p]) {
+									values[p] = [];
+									objectSeries.push(p);
+								}
+								
 								if (!values[p][labelIndex])
 									values[p][labelIndex] = 0;
 								
@@ -187,6 +197,14 @@ function CreateGraphic(graphicNum) {
 			series = series.sort();
 			objectSeries = objectSeries.sort();
 
+			// Set all labels without data to zero.
+			for (var v in values) {
+				for (var l = 0; l < categories.length; l++) {
+					if (!values[v][l])
+						values[v][l] = null;
+				}
+			}
+			
 			if (categoriesBR.length === 0) {
 				categories = newCategories;
 				categoriesBR = newCategoriesBR;
@@ -195,11 +213,8 @@ function CreateGraphic(graphicNum) {
 			// Get secondary data.
 			var secondaryData = {};
 			if (includeControl) {
-				var labels = [];
-				var labelsEnd = [];
-				var labelsD = [];
-				var labelsBR = [];
 				var c;
+				var labels = [], labelsEnd = [], labelsD = [], labelsBR = [];
 				if (dateGroup !== 3) {
 					for (c = 0; c < categories.length; c++) {
 						labels[c] = moment(categories[c]).format("YYYY-MM-DD HH:mm:ss");
@@ -231,6 +246,7 @@ function CreateGraphic(graphicNum) {
 						var queryResult = json.data;
 
 						if (queryResult === "errorL") {
+							$('#graph-row' + graphicNum + ' .refresh').removeClass('fa-spin');
 							$("#msg_erro").html("Falha ao recuperar os dados secundários da análise!<br />Sessão expirada! Por favor, faça login novamente.");
 							$('#erro').fadeIn('slow').addClass('open-message');
 							$('html, body').animate({ scrollTop: 0 }, 'slow');
@@ -240,22 +256,45 @@ function CreateGraphic(graphicNum) {
 						}
 
 						// Handle secondary data
-						var serie, lab;
+						var serie, lab, push;
 						for (var row = 0; row < queryResult.length; row++) {
-							serie = queryResult[row]['Series'];
+							if (spx[0] !== ".") {
+								serie = queryResult[row]['Series'];
+							} else {
+								for (var p in objSeries) {
+									if (objSeries[p].indexOf(queryResult[row]['Series']) !== -1) {
+										serie = p;
+										break;
+									}
+								}
+							}	
+							
 							lab = queryResult[row]['labelBR'];
 							if (!secondaryData[serie])
 								secondaryData[serie] = {};
 
-							if (!secondaryData[serie][lab])
+							push = -1;
+							if (!secondaryData[serie][lab]) {
 								secondaryData[serie][lab] = [];
-
-							secondaryData[serie][lab].push({
-								group: "Peças não produzidas:",
-								showTotal: true,
-								label: queryResult[row]['nome'],
-								value: Round(queryResult[row]['Duracao'] / (3599 / producaoPorHora[queryResult[row]['Series']]), 2)
-							});
+							} else if (spx[0] === ".") {
+								for (var s = 0; s < secondaryData[serie][lab].length; s++) {
+									if (secondaryData[serie][lab][s].label === queryResult[row]['nome']) {
+										push = s;
+										break;
+									}
+								}
+							}
+							
+							if (push === -1) {
+								secondaryData[serie][lab].push({
+									group: "Peças não produzidas:",
+									showTotal: true,
+									label: queryResult[row]['nome'],
+									value: Round(queryResult[row]['Duracao'] / (3599 / producaoPorHora[queryResult[row]['Series']]), 2)
+								});
+							} else {
+								secondaryData[serie][lab][push].value += Round(queryResult[row]['Duracao'] / (3599 / producaoPorHora[queryResult[row]['Series']]), 2);
+							}
 						}
 
 						RenderGraphicMultiSeriesAndValues(graphicNum, title, (objectSeries.length > 0) ? objectSeries : series, categoriesBR, values, type, prefix, xLabelAngle, echartsY, secondaryData);
@@ -272,6 +311,7 @@ function CreateGraphic(graphicNum) {
 			}
 		},
 		error: function (data) {
+			$('#graph-row' + graphicNum + ' .refresh').removeClass('fa-spin');
 			$("#msg_erro").html("Falha ao recuperar os dados da análise!<br />Problema de comunicação com o banco de dados.");
 			$('#erro').fadeIn('slow').addClass('open-message');
 			$('html, body').animate({ scrollTop: 0 }, 'slow');

@@ -442,7 +442,7 @@ function RenderGraphicMultiSeriesAndValues (graphicNum, title, seriesNames, labe
 						var groupsTotal = {};
 
 						var append = [serie], grp = "";
-						append.push(prefix + ((!isNaN(tooltipItems.yLabel * 1)) ? tooltipItems.yLabel : "-"));
+						append.push(prefix + ((!isNaN(tooltipItems.yLabel) && tooltipItems.yLabel !== null) ? tooltipItems.yLabel : "-"));
 						if (secondary) {
 							for (var d = 0; d < secondary.length; d++) {
 								grp = secondary[d].group;
@@ -512,8 +512,10 @@ function RenderGraphicMultiSeriesAndValues (graphicNum, title, seriesNames, labe
 		}
 
 		// No data, no Morris Graph
-		if (labels.length === 0)
+		if (labels.length === 0) {
+			$('#graph-row' + graphicNum + ' .refresh').removeClass('fa-spin');
 			return;
+		}
 
 		var morrisGraph = {
 			element: 'graph' + graphicNum,
@@ -526,7 +528,7 @@ function RenderGraphicMultiSeriesAndValues (graphicNum, title, seriesNames, labe
 				if (seriesNames.length === 1) {
 					var append = $(content), serie, lab;
 					serie = options.labels[0];
-					append[1].innerHTML = serie + "<br />" + prefix + ((!isNaN(row[serie])) ? row[serie] : "-");
+					append[1].innerHTML = serie + "<br />" + prefix + ((!isNaN(row[serie]) && row[serie] !== null) ? row[serie] : "-");
 
 					var secondary;
 					if (secondaryData)
@@ -663,11 +665,11 @@ function RenderGraphicMultiSeriesAndValues (graphicNum, title, seriesNames, labe
 				formatter: function (params, ticket, callback) {
 					var append = "<span style='display: inline-block; margin-right: 5px; border-radius: 10px; width: 9px; height: 9px; background-color: " + params.color + "'></span> " + params.seriesName + "<br />";
 					if (typeof params.data !== "object")
-						append += params.name + "<br />" + prefix + ((!isNaN(params.data * 1)) ? params.data : "-");
+						append += params.name + "<br />" + prefix + ((!isNaN(params.data) && params.data !== null) ? params.data : "-");
 					else if (params.data.name)
-						append += params.data.name + ": " + ((!isNaN(params.data.value * 1)) ? params.data.value : "-");
+						append += params.data.name + ": " + ((!isNaN(params.data.value) && params.data.value !== null) ? params.data.value : "-");
 					else
-						append += params.data[0] + "<br />" + prefix + ((!isNaN(params.data[1] * 1)) ? params.data[1] : "-");
+						append += params.data[0] + "<br />" + prefix + ((!isNaN(params.data[1]) && params.data[1] !== null) ? params.data[1] : "-");
 
 					var secondary;
 					if (secondaryData)
@@ -815,6 +817,7 @@ function RenderGraphicMultiSeriesAndValues (graphicNum, title, seriesNames, labe
 		$('#graph-row' + graphicNum + ' .export button').removeAttr('disabled');
 
 	$('#graph-row' + graphicNum + ' .producao_dados').text(moment().format('DD/MM/YYYY HH:mm:ss'));
+	$('#graph-row' + graphicNum + ' .refresh').removeClass('fa-spin');	
 }
 
 // Clear the canvas and div from the graph-set.
@@ -921,7 +924,6 @@ function SetGraphUpdateTrigger () {
 
 	$('.small-search').keyup(function () {
 		var search = $(this).val().toUpperCase();
-		console.log(search);
 		var id = $(this).parents('.graph-row').attr('id').substr(9);
 		var serie = SeriesPrefix(id);
 		serie = (serie[0] !== '.') ? '.' + serie : serie;
@@ -970,7 +972,7 @@ $(document).ready(function () {
 		$('.graph-sets').show();
 	});
 
-	// Save graph as image.	
+	// Save graph as image
 	$('.salvar').click(function (e) {
 		var id = $(this).parents('.graph-row').attr('id').substr(9);
 		var graph_row = $('#graph-row' + id);
@@ -1006,5 +1008,11 @@ $(document).ready(function () {
 
 		if (graph_row.hasClass('morris'))
 			delete canvas;
+	});
+
+	// Refresh the graph by user click
+	$('.refresh').click(function () {
+		var id = $(this).parents('.graph-row').attr('id').substr(9);
+		CreateGraphic(id);
 	});
 });

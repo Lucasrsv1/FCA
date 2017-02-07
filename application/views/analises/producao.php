@@ -13,7 +13,7 @@
 		<div class="col-md-12 col-sm-12 col-xs-12 dashboard_graph">
 			<div class="row x_title">
 				<div class="col-md-6">
-					<h3>Produção por Equipamento <small class="producao_dados"></small></h3>
+					<h3><i class="fa fa-refresh refresh" title="Recarregar gráfico"></i>Produção por Equipamento <small class="producao_dados"></small></h3>
 				</div>
 				<div class="col-md-6">
 					<div class="col-xs-8">
@@ -117,7 +117,7 @@
 		<div class="col-md-12 col-sm-12 col-xs-12 dashboard_graph">
 			<div class="row x_title">
 				<div class="col-md-6">
-					<h3>Produção por Equipamento <small class="producao_dados"></small></h3>
+					<h3><i class="fa fa-refresh refresh" title="Recarregar gráfico"></i>Produção por Equipamento <small class="producao_dados"></small></h3>
 				</div>
 				<div class="col-md-6">
 					<div class="col-xs-8">
@@ -204,6 +204,5 @@
 	</div>
     	
 	<!-- Produção Scripts -->
-	<script src="<?php echo base_url("system/utils/js/producao.js");
-?>"></script>
+	<script src="<?php echo base_url("system/utils/js/producao.js");?>"></script>
 </div>

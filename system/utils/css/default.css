@@ -229,6 +229,14 @@ ul.series_list {
     float: right !important;
 }
 
+.refresh {
+	margin-right: 10px;
+}
+
+.refresh:hover {
+	cursor: pointer;
+}
+
 @media print {
 	* {
 		visibility: hidden;
