@@ -1,4 +1,4 @@
-﻿<div>
+<div>
     <!-- LRV Graphics -->
 	<script src="<?php echo base_url("system/utils/js/graphics.js");?>"></script>
 	

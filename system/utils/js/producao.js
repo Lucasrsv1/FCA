@@ -1,4 +1,4 @@
-﻿function CreateGraphic(graphicNum) {
+function CreateGraphic(graphicNum) {
 	"use strict";
 
 	// Get Date Group
