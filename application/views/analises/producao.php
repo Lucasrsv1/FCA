@@ -12,17 +12,14 @@
 	<div id="graph-row0" class="row graph-row">
 		<div class="col-md-12 col-sm-12 col-xs-12 dashboard_graph">
 			<div class="row x_title">
-				<div class="col-md-6">
+				<div style="float: left; margin-bottom: 10px;">
 					<h3><i class="fa fa-refresh refresh" title="Recarregar gráfico"></i>Produção por Equipamento <small class="producao_dados"></small></h3>
 				</div>
-				<div class="col-md-6">
-					<div class="col-xs-8">
-						<div id="" class="reportrange pull-right" style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc; margin-right: -4px;">
+					<div style="float: right;">
+						<div id="" class="reportrange date-box">
 							<i class="glyphicon glyphicon-calendar fa fa-calendar"></i>
 							<span></span> <b class="caret"></b>
 						</div>
-					</div>
-					<div class="col-xs-4" style="padding-right: 0px;">
 						<span class="axis">Eixo X:</span>
 						<select class="category graph-select" style="height: 31px; width: auto;">
 							<option value="0"> Horas </option>
@@ -31,7 +28,6 @@
 							<option value="3"> Anos </option>
 						</select>
 					</div>
-				</div>
 			</div>
 			
 			<div class="col-md-9 col-sm-8 col-xs-12">
@@ -116,17 +112,15 @@
 	<div id="graph-row1" class="row graph-row">
 		<div class="col-md-12 col-sm-12 col-xs-12 dashboard_graph">
 			<div class="row x_title">
-				<div class="col-md-6">
+				<div class="col-md-7">
 					<h3><i class="fa fa-refresh refresh" title="Recarregar gráfico"></i>Produção por Equipamento <small class="producao_dados"></small></h3>
 				</div>
-				<div class="col-md-6">
-					<div class="col-xs-8">
-						<div id="" class="reportrange pull-right" style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc; margin-right: -4px;">
+				<div class="col-md-5">
+					<div style="float: right;">
+						<div id="" class="reportrange date-box">
 							<i class="glyphicon glyphicon-calendar fa fa-calendar"></i>
 							<span></span> <b class="caret"></b>
 						</div>
-					</div>
-					<div class="col-xs-4" style="padding-right: 0px;">
 						<span class="axis">Eixo X:</span>
 						<select class="category graph-select" style="height: 31px; width: auto;">
 							<option value="0"> Horas </option>

@@ -230,10 +230,22 @@ ul.series_list {
 }
 
 .refresh {
-	margin-right: 10px;
+	margin: 0px 10px;
 }
 
 .refresh:hover {
+	cursor: pointer;
+}
+
+.date-box {
+	display: inline-block;
+	background: #fff;
+	padding: 5px 10px;
+	border: 1px solid #ccc;
+	margin-right: -4px;
+}
+
+.date-box:hover {
 	cursor: pointer;
 }
 
