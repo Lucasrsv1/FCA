@@ -218,14 +218,14 @@ function CreateGraphic (graphicNum) {
 				if (dateGroup !== 3) {
 					for (c = 0; c < categories.length; c++) {
 						labels[c] = moment(categories[c]).format("YYYY-MM-DD HH:mm:ss");
-						labelsEnd[c] = moment(categories[c]).endOf(dateGroups[dateGroup]).format("YYYY-MM-DD HH:mm:ss");
+						labelsEnd[c] = moment(categories[c]).endOf(dateGroups[dateGroup]).add(1, 'seconds').format("YYYY-MM-DD HH:mm:ss");
 						labelsD[c] = categories[c];
 						labelsBR[c] = categoriesBR[c];
 					}
 				} else {
 					for (c = 0; c < categories.length; c++) {
 						labels[c] = moment(categories[c], "YYYY").format("YYYY-MM-DD HH:mm:ss");
-						labelsEnd[c] = moment(categories[c], "YYYY").endOf(dateGroups[dateGroup]).format("YYYY-MM-DD HH:mm:ss");
+						labelsEnd[c] = moment(categories[c], "YYYY").endOf(dateGroups[dateGroup]).add(1, 'seconds').format("YYYY-MM-DD HH:mm:ss");
 						labelsD[c] = categories[c];
 						labelsBR[c] = categoriesBR[c];
 					}
@@ -290,10 +290,10 @@ function CreateGraphic (graphicNum) {
 									group: "Peças não produzidas:",
 									showTotal: true,
 									label: queryResult[row]['nome'],
-									value: Round(queryResult[row]['Duracao'] / (3599 / producaoPorHora[queryResult[row]['Series']]), 2)
+									value: Round(queryResult[row]['Duracao'] / (3600 / producaoPorHora[queryResult[row]['Series']]), 2)
 								});
 							} else {
-								secondaryData[serie][lab][push].value += Round(queryResult[row]['Duracao'] / (3599 / producaoPorHora[queryResult[row]['Series']]), 2);
+								secondaryData[serie][lab][push].value += Round(queryResult[row]['Duracao'] / (3600 / producaoPorHora[queryResult[row]['Series']]), 2);
 							}
 						}
 
