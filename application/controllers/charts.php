@@ -6,6 +6,10 @@
 		}
 		
 		function index () {
+			redirect('charts/producao');
+		}
+
+		function producao () {
 			$session_data = $this->session->userdata('logged_in');
 			if (!$session_data)
 				redirect('login');
@@ -17,6 +21,21 @@
 			
 			$this->template->write_view('menu', 'menu_view', $data);
 			$this->template->write_view('content', 'analises/producao');
+			$this->template->render();
+		}
+		
+		function status () {
+			$session_data = $this->session->userdata('logged_in');
+			if (!$session_data)
+				redirect('login');
+			
+			$data['title'] = "Gráficos de Controle de Estado";
+			$data['session_data'] = $session_data;
+			$data['fullscreen'] = $this->session->userdata('fullscreen');
+			$data['nav'] = $this->session->userdata('nav');
+			
+			$this->template->write_view('menu', 'menu_view', $data);
+			$this->template->write_view('content', 'analises/status');
 			$this->template->render();
 		}
 	}

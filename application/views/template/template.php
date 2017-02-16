@@ -1,6 +1,8 @@
 <?php
 
-	$onLoad = "base_url = '".base_url()."'; ";
+	$baseUrlScript = "<script type=\"text/javascript\"> var base_url = '".base_url()."'; </script>";
+
+	$onLoad = "";
 	if ($fullscreen == true)
 		$onLoad .= "fullscreen = true; ";
 	else
@@ -58,6 +60,9 @@
         
         <!-- jQuery -->
 		<script src="<?php echo base_url("system/vendors/jquery/dist/jquery.min.js"); ?>"></script>
+
+		<!-- Base Url -->
+		<?php echo $baseUrlScript; ?>
 	</head>
     <body class="nav-md" onLoad="<?php echo $onLoad; ?>">
 		<div class="container body">

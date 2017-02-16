@@ -109,6 +109,7 @@
 		}
 	
 		function Atualizar () {
+			$this->form_validation->set_rules('id', 'id', 'required');
 			$this->form_validation->set_rules('radio', 'radio', 'required');
 			$this->form_validation->set_rules('caf', 'caf', 'required');
 			$this->form_validation->set_rules('tipo', 'tipo', 'required');
@@ -126,6 +127,7 @@
 				$mensagem = NULL;
 			
 			if ($mensagem == NULL) {
+				$id = $this->input->post('id');
 				$radio = $this->input->post('radio');
 				$caf = $this->input->post('caf');
 				$tipo = $this->input->post('tipo');
@@ -228,6 +230,24 @@
 				
 				$this->load->model('equipamentos_model');
 				$analise = $this->equipamentos_model->MausEventos($cafs, $labels, $labelsEnd, $labelsD, $labelsBR);
+			}
+			
+			echo json_encode(array('data' => $analise));
+		}
+		
+		function TodosEventos () {
+			$analise = NULL;
+			$session_data = $this->session->userdata('logged_in');
+			if (!$session_data)
+				$analise = 'errorL'; // Login inválido
+			
+			if ($analise === NULL) {
+				$cafs = $this->input->post('cafs');
+				$labels = $this->input->post('labels');
+				$labelsEnd = $this->input->post('labelsEnd');
+				
+				$this->load->model('equipamentos_model');
+				$analise = $this->equipamentos_model->TodosEventos($cafs, $labels, $labelsEnd);
 			}
 			
 			echo json_encode(array('data' => $analise));

@@ -107,7 +107,7 @@ function CreateGraphic (graphicNum) {
 	// Get Values
 	var values = {};
 	$.ajax({
-		url: "gerenciar/equipamentos/AnaliseProducao/",
+		url: base_url + "gerenciar/equipamentos/AnaliseProducao/",
 		type: "POST",
 		data: {
 			startDate: startDate.format(format),
@@ -123,12 +123,14 @@ function CreateGraphic (graphicNum) {
 				$("#msg_erro").html("Falha ao recuperar os dados da análise!<br />Sessão expirada! Por favor, faça login novamente.");
 				$('#erro').fadeIn('slow').addClass('open-message');
 				$('html, body').animate({ scrollTop: 0 }, 'slow');
+				$('#graph-row' + graphicNum + ' .refresh').removeClass('fa-spin');
 				return;
 			} else if (queryResult === "errorP") {
 				$('#graph-row' + graphicNum + ' .refresh').removeClass('fa-spin');
 				$("#msg_erro").html("Falha ao recuperar os dados da análise!<br />Verifique as configurações, series e datas selicionadas.");
 				$('#erro').fadeIn('slow').addClass('open-message');
 				$('html, body').animate({ scrollTop: 0 }, 'slow');
+				$('#graph-row' + graphicNum + ' .refresh').removeClass('fa-spin');
 				return;
 			}
 
@@ -214,32 +216,28 @@ function CreateGraphic (graphicNum) {
 			var secondaryData = {};
 			if (includeControl) {
 				var c;
-				var labels = [], labelsEnd = [], labelsD = [], labelsBR = [];
+				var labels = [], labelsEnd = [];
 				if (dateGroup !== 3) {
 					for (c = 0; c < categories.length; c++) {
 						labels[c] = moment(categories[c]).format("YYYY-MM-DD HH:mm:ss");
 						labelsEnd[c] = moment(categories[c]).endOf(dateGroups[dateGroup]).add(1, 'seconds').format("YYYY-MM-DD HH:mm:ss");
-						labelsD[c] = categories[c];
-						labelsBR[c] = categoriesBR[c];
 					}
 				} else {
 					for (c = 0; c < categories.length; c++) {
 						labels[c] = moment(categories[c], "YYYY").format("YYYY-MM-DD HH:mm:ss");
 						labelsEnd[c] = moment(categories[c], "YYYY").endOf(dateGroups[dateGroup]).add(1, 'seconds').format("YYYY-MM-DD HH:mm:ss");
-						labelsD[c] = categories[c];
-						labelsBR[c] = categoriesBR[c];
 					}
 				}
 
 				$.ajax({
-					url: "gerenciar/equipamentos/MausEventos/",
+					url: base_url + "gerenciar/equipamentos/MausEventos/",
 					type: "POST",
 					data: {
 						cafs: series,
 						labels: labels.join(", "),
 						labelsEnd: labelsEnd.join(", "),
-						labelsD: labelsD.join(", "),
-						labelsBR: labelsBR.join(", ")
+						labelsD: categories.join(", "),
+						labelsBR: categoriesBR.join(", ")
 					},
 					success: function (data) {
 						var json = $.parseJSON(data);
@@ -250,6 +248,7 @@ function CreateGraphic (graphicNum) {
 							$("#msg_erro").html("Falha ao recuperar os dados secundários da análise!<br />Sessão expirada! Por favor, faça login novamente.");
 							$('#erro').fadeIn('slow').addClass('open-message');
 							$('html, body').animate({ scrollTop: 0 }, 'slow');
+							$('#graph-row' + graphicNum + ' .refresh').removeClass('fa-spin');
 							return;
 						} else if (queryResult.length === 0) {
 							secondaryData = null;
@@ -297,17 +296,24 @@ function CreateGraphic (graphicNum) {
 							}
 						}
 
-						RenderGraphicMultiSeriesAndValues(graphicNum, title, (objectSeries.length > 0) ? objectSeries : series, categoriesBR, values, type, prefix, xLabelAngle, echartsY, secondaryData);
+						// Get graph zoom
+						var zoom = $('#graph-row' + graphicNum + ' .zoom').val().replace(/%/g, "");
+						RenderGraphicMultiSeriesAndValues(graphicNum, title, (objectSeries.length > 0) ? objectSeries : series, categoriesBR, values, type, prefix, xLabelAngle, echartsY, secondaryData, zoom);
 					},
 					error: function (data) {
 						$("#msg_erro").html("Falha ao recuperar os dados secundários da análise!<br />Problema de comunicação com o banco de dados.");
 						$('#erro').fadeIn('slow').addClass('open-message');
 						$('html, body').animate({ scrollTop: 0 }, 'slow');
-						RenderGraphicMultiSeriesAndValues(graphicNum, title, (objectSeries.length > 0) ? objectSeries : series, categoriesBR, values, type, prefix, xLabelAngle, echartsY, null);
+
+						// Get graph zoom
+						var zoom = $('#graph-row' + graphicNum + ' .zoom').val().replace(/%/g, "");
+						RenderGraphicMultiSeriesAndValues(graphicNum, title, (objectSeries.length > 0) ? objectSeries : series, categoriesBR, values, type, prefix, xLabelAngle, echartsY, null, zoom);
 					}
 				});
 			} else {
-				RenderGraphicMultiSeriesAndValues(graphicNum, title, (objectSeries.length > 0) ? objectSeries : series, categoriesBR, values, type, prefix, xLabelAngle, echartsY, null);
+				// Get graph zoom
+				var zoom = $('#graph-row' + graphicNum + ' .zoom').val().replace(/%/g, "");
+				RenderGraphicMultiSeriesAndValues(graphicNum, title, (objectSeries.length > 0) ? objectSeries : series, categoriesBR, values, type, prefix, xLabelAngle, echartsY, null, zoom);
 			}
 		},
 		error: function (data) {
@@ -315,14 +321,12 @@ function CreateGraphic (graphicNum) {
 			$("#msg_erro").html("Falha ao recuperar os dados da análise!<br />Problema de comunicação com o banco de dados.");
 			$('#erro').fadeIn('slow').addClass('open-message');
 			$('html, body').animate({ scrollTop: 0 }, 'slow');
+			$('#graph-row' + graphicNum + ' .refresh').removeClass('fa-spin');
 		}
 	});
 }
 
 var producaoPorHora = {};
-
-// Series arrays and objects
-var cafs = [], saps = {}, descriptions = {}, products = {}, sectors = {}, utes = {};
 
 // Return the right array or object of series.
 function GetList (prefix) {
@@ -357,114 +361,32 @@ function DefaultPrefix (graphicNum) {
 	}
 }
 
-$(document).ready(function () {
-	// Load available series
-	$.ajax({
-		url: "gerenciar/equipamentos/SelecionarTudo/",
-		success: function (data) {
-			var json = $.parseJSON(data);
-			var equipamentos = json.data;
+function LoadedSeries (seriesName) {
+	// After a series been loaded
+	if (seriesName === "equipamentos") {
+		$.ajax({
+			url: base_url + "gerenciar/equipamentos/ProducaoPorHora/",
+			type: "POST",
+			data: {
+				cafs: cafs
+			},
+			success: function (data) {
+				var json = $.parseJSON(data);
+				var equipamentos = json.data;
+				for (var i = 0; i < equipamentos.length; i++)
+					producaoPorHora[equipamentos[i]['Series']] = equipamentos[i]['Value'] * 1;
 
-			for (var i = 0; i < equipamentos.length; i++) {
-				var caf = equipamentos[i]['caf'];
-				var cod_sap = equipamentos[i]['cod_sap'];
-				var descricao = equipamentos[i]['descricao'];
-				var produto = equipamentos[i]['produto'];
-				var setor = equipamentos[i]['setor'];
-				var ute = equipamentos[i]['ute'];
-
-				$('.CAF_list').each(function (index, element) {
-					// Get the <ul> element
-					var container;
-					if ($(element).children('div').children('.mCSB_container'))
-						container = $(element).children('div').children('.mCSB_container');
-					else
-						container = $(element);
-
-					// Create the series description
-					var title = "Descrição: " + descricao + "&#10;Produto: " + produto + "&#10;UTE: " + ute + "&#10;Setor: " + setor + "&#10;CAF: " + caf + "&#10;Código SAP: " + cod_sap;
-
-					// Add the series <li> to the <ul>
-					container.append($("<li title='" + title + "'> <p> <input type=\"checkbox\" class=\"flat CAF" + i + "\" /> " + equipamentos[i]['caf'] + " </p> </li>"));
-				});
-
-				cafs.push(caf);
-
-				if (!saps[cod_sap])
-					saps[cod_sap] = [];
-
-				saps[cod_sap].push(caf);
-
-				if (!descriptions[descricao])
-					descriptions[descricao] = [];
-
-				descriptions[descricao].push(caf);
-
-				if (!products[produto])
-					products[produto] = [];
-
-				products[produto].push(caf);
-
-				if (!sectors[setor])
-					sectors[setor] = [];
-
-				sectors[setor].push(caf);
-
-				if (!utes[ute])
-					utes[ute] = [];
-
-				utes[ute].push(caf);
-			}
-
-			var itemsLabels = ["Descrição: ", "Produto: ", "UTE: ", "Setor: ", "Código SAP: "];
-			var itemsPrefix = ['.DESCRT', '.PROD', '.UTE', '.SECT', '.SAP'];
-			var items = [descriptions, products, utes, sectors, saps];
-
-			PopulateObjectSeries(items, itemsLabels, itemsPrefix, "CAF: ");
-
-			if (equipamentos.length === 0) {
-				$("#msg_erro").html("Falha ao recuperar equipamentos cadastrados!<br />Nenhum equipamento encontrado!");
-				$('#erro').fadeIn('slow').addClass('open-message');
-				$('html, body').animate({ scrollTop: 0 }, 'slow');
-			} else {
-				$('input.flat').iCheck({
-					checkboxClass: 'icheckbox_flat-green',
-					radioClass: 'iradio_flat-green'
-				});
-
-				SetGraphUpdateTrigger();
-			}
-
-			// After series been loaded
-			$.ajax({
-				url: "gerenciar/equipamentos/ProducaoPorHora/",
-				type: "POST",
-				data: {
-					cafs: cafs
-				},
-				success: function (data) {
-					var json = $.parseJSON(data);
-					var equipamentos = json.data;
-					for (var i = 0; i < equipamentos.length; i++)
-						producaoPorHora[equipamentos[i]['Series']] = equipamentos[i]['Value'] * 1;
-
-					if (equipamentos.length === 0) {
-						$("#msg_erro").html("Falha ao recuperar a produção por equipamentos!<br />Sem dados de produção!");
-						$('#erro').fadeIn('slow').addClass('open-message');
-						$('html, body').animate({ scrollTop: 0 }, 'slow');
-					}
-				},
-				error: function (data) {
-					$("#msg_erro").html("Falha ao recuperar a produção por equipamentos!<br />Problema de comunicação com o banco de dados.");
+				if (equipamentos.length === 0) {
+					$("#msg_erro").html("Falha ao recuperar a produção por equipamentos!<br />Sem dados de produção!");
 					$('#erro').fadeIn('slow').addClass('open-message');
 					$('html, body').animate({ scrollTop: 0 }, 'slow');
 				}
-			});
-		},
-		error: function (data) {
-			$("#msg_erro").html("Falha ao recuperar equipamentos cadastrados!<br />Problema de comunicação com o banco de dados.");
-			$('#erro').fadeIn('slow').addClass('open-message');
-			$('html, body').animate({ scrollTop: 0 }, 'slow');
-		}
-	});
-});
+			},
+			error: function (data) {
+				$("#msg_erro").html("Falha ao recuperar a produção por equipamentos!<br />Problema de comunicação com o banco de dados.");
+				$('#erro').fadeIn('slow').addClass('open-message');
+				$('html, body').animate({ scrollTop: 0 }, 'slow');
+			}
+		});
+	}
+}

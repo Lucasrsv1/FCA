@@ -162,13 +162,33 @@
 			
 			$selectLabels = "SELECT";
 			for ($l = 0; $l < count($labels); $l++) {
-					if ($l === 0)
-						$selectLabels .= " '".$labels[$l]."' AS 'label', '".$labelsEnd[$l]."' AS 'labelEnd', '".$labelsD[$l]."' AS 'labelD', '".$labelsBR[$l]."' AS 'labelBR'";
-					else
-						$selectLabels .= " UNION ALL SELECT '".$labels[$l]."', '".$labelsEnd[$l]."', '".$labelsD[$l]."', '".$labelsBR[$l]."'";
+				if ($l === 0)
+					$selectLabels .= " '".$labels[$l]."' AS 'label', '".$labelsEnd[$l]."' AS 'labelEnd', '".$labelsD[$l]."' AS 'labelD', '".$labelsBR[$l]."' AS 'labelBR'";
+				else
+					$selectLabels .= " UNION ALL SELECT '".$labels[$l]."', '".$labelsEnd[$l]."', '".$labelsD[$l]."', '".$labelsBR[$l]."'";
 			}
 			
 			$select = $this->db->query("SELECT L.label, L.labelEnd, E.caf AS 'Series', C.evento_tipo_id, ET.nome, C.inicio AS 'Inicio', C.fim AS 'Fim', SUM(IF (C.fim IS NULL, timestampdiff(SECOND, C.inicio, L.labelEnd), IF (C.inicio BETWEEN L.label AND L.labelEnd AND C.fim BETWEEN L.label AND L.labelEnd, C.duracao, IF (C.inicio BETWEEN L.label AND L.labelEnd, timestampdiff(SECOND, C.inicio, L.labelEnd), IF (C.fim BETWEEN L.label AND L.labelEnd, timestampdiff(SECOND, L.label, C.fim), IF (L.label BETWEEN C.inicio AND C.fim AND L.labelEnd BETWEEN C.inicio AND C.fim, timestampdiff(SECOND, L.label, L.labelEnd), 0)))))) AS 'Duracao', L.labelD, L.labelBR FROM controle C INNER JOIN equipamentos E ON E.radio = C.equipamentos_radio INNER JOIN evento_tipo ET ON C.evento_tipo_id = ET.id LEFT JOIN ($selectLabels) L ON C.inicio BETWEEN L.label AND L.labelEnd OR C.fim BETWEEN L.label AND L.labelEnd OR (L.label BETWEEN C.inicio AND C.fim AND L.labelEnd BETWEEN C.inicio AND C.fim) WHERE E.caf IN ('$inCafs') AND C.evento_tipo_id != 10 AND (C.inicio BETWEEN L.label AND L.labelEnd OR C.fim BETWEEN L.label AND L.labelEnd OR (L.label BETWEEN C.inicio AND C.fim AND L.labelEnd BETWEEN C.inicio AND C.fim)) GROUP BY 1, 3, 4 HAVING Duracao > 0 ORDER BY 1, 3, 5 ASC");
+			if ($select)
+				return $select->result();
+			else
+				return 'error';
+		}
+		
+		function TodosEventos ($cafs, $labelsJoin, $labelsEndJoin) {
+			$inCafs = implode("', '", $cafs);
+			$labels = explode(", ", $labelsJoin);
+			$labelsEnd = explode(", ", $labelsEndJoin);
+			
+			$selectLabels = "SELECT";
+			for ($l = 0; $l < count($labels); $l++) {
+				if ($l === 0)
+					$selectLabels .= " '".$labels[$l]."' AS 'label', '".$labelsEnd[$l]."' AS 'labelEnd'";
+				else
+					$selectLabels .= " UNION ALL SELECT '".$labels[$l]."', '".$labelsEnd[$l]."'";
+			}
+			
+			$select = $this->db->query("SELECT L.label, L.labelEnd, E.caf AS 'Series', C.evento_tipo_id, ET.nome, C.inicio AS 'Inicio', C.fim AS 'Fim', SUM(IF (C.fim IS NULL, timestampdiff(SECOND, C.inicio, L.labelEnd), IF (C.inicio BETWEEN L.label AND L.labelEnd AND C.fim BETWEEN L.label AND L.labelEnd, C.duracao, IF (C.inicio BETWEEN L.label AND L.labelEnd, timestampdiff(SECOND, C.inicio, L.labelEnd), IF (C.fim BETWEEN L.label AND L.labelEnd, timestampdiff(SECOND, L.label, C.fim), IF (L.label BETWEEN C.inicio AND C.fim AND L.labelEnd BETWEEN C.inicio AND C.fim, timestampdiff(SECOND, L.label, L.labelEnd), 0)))))) AS 'Duracao' FROM controle C INNER JOIN equipamentos E ON E.radio = C.equipamentos_radio INNER JOIN evento_tipo ET ON C.evento_tipo_id = ET.id LEFT JOIN ($selectLabels) L ON C.inicio BETWEEN L.label AND L.labelEnd OR C.fim BETWEEN L.label AND L.labelEnd OR (L.label BETWEEN C.inicio AND C.fim AND L.labelEnd BETWEEN C.inicio AND C.fim) WHERE E.caf IN ('$inCafs') AND C.fim IS NOT NULL AND (C.inicio BETWEEN L.label AND L.labelEnd OR C.fim BETWEEN L.label AND L.labelEnd OR (L.label BETWEEN C.inicio AND C.fim AND L.labelEnd BETWEEN C.inicio AND C.fim)) GROUP BY 1, 3, C.id HAVING Duracao > 0 ORDER BY 1, 3, 6 ASC");
 			if ($select)
 				return $select->result();
 			else

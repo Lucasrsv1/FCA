@@ -321,7 +321,7 @@ body .container.body .right_col {
     padding: 10px !important; } }
 @media (max-width: 1200px) {
   .x_title h2 {
-    width: 62%;
+    /*width: 62%;*/
     font-size: 17px; }
 
   .tile, .graph {
@@ -1580,7 +1580,7 @@ span.right {
 /** /top tiles **/
 .dashboard_graph {
   background: #fff;
-  padding: 7px 10px; }
+  padding: 7px 0px; }
 
 .dashboard_graph .col-md-9, .dashboard_graph .col-md-3 {
   padding: 0; }

@@ -13,26 +13,26 @@
 		<div class="col-md-12 col-sm-12 col-xs-12 dashboard_graph">
 			<div class="row x_title">
 				<div style="float: left; margin-bottom: 10px;">
-					<h3><i class="fa fa-refresh refresh" title="Recarregar gráfico"></i>Produção por Equipamento <small class="producao_dados"></small></h3>
+					<h3><i class="fa fa-refresh refresh" title="Recarregar gráfico"></i>Produção por Equipamento <small class="data_moment"></small></h3>
 				</div>
-					<div style="float: right;">
-						<div id="" class="reportrange date-box">
-							<i class="glyphicon glyphicon-calendar fa fa-calendar"></i>
-							<span></span> <b class="caret"></b>
-						</div>
-						<span class="axis">Eixo X:</span>
-						<select class="category graph-select" style="height: 31px; width: auto;">
-							<option value="0"> Horas </option>
-							<option value="1" selected> Dias </option>
-							<option value="2"> Meses </option>
-							<option value="3"> Anos </option>
-						</select>
+				<div style="float: right;">
+					<div id="" class="reportrange date-box">
+						<i class="glyphicon glyphicon-calendar fa fa-calendar"></i>
+						<span></span> <b class="caret"></b>
 					</div>
+					<span class="axis">Eixo X:</span>
+					<select class="category graph-select" style="height: 31px; width: auto;">
+						<option value="0"> Horas </option>
+						<option value="1" selected> Dias </option>
+						<option value="2"> Meses </option>
+						<option value="3"> Anos </option>
+					</select>
+				</div>
 			</div>
 			
 			<div class="col-md-9 col-sm-8 col-xs-12">
 				<div class="graph-sets" style="width: 100%;">
-					<canvas id="canvas0" style="width: 100%; height: auto; display: none;"></canvas>
+					<canvas id="canvas0" style="display: none;"></canvas>
 					<h4 id="morris0_title" class="graph-title"></h4>
                     <div id="graph0" style="width:100%; height: 404px;"></div>
 				</div>
@@ -51,7 +51,7 @@
 					<div class="clearfix"></div>
 				</div>
 				
-				<div class="col-md-12 col-sm-12 col-xs-6">
+				<div class="col-md-12 col-sm-12 col-xs-12">
 					<ul class="series_list CAF_list not-hide"></ul>
 					<ul class="series_list SAP_list hide"></ul>
 					<ul class="series_list DESCRT_list hide"></ul>
@@ -65,14 +65,14 @@
 					<div class="clearfix"></div>
 				</div>
 				
-				<div class="col-md-12 col-sm-12 col-xs-6">
+				<div class="col-md-12 col-sm-12 col-xs-12">
 					<select class="graphic_type graph-select" style="height: 31px; margin-bottom: 10px;">
 						<option value="0"> Área </option>
-						<option value="1" selected> Barras </option>
+						<option value="1"> Barras </option>
 						<option value="2"> Linhas </option>
 						<option value="3"> Radar </option>
 						<option value="4"> ECharts Área </option>
-						<option value="5"> ECharts Barras </option>
+						<option value="5" selected> ECharts Barras </option>
 						<option value="6"> ECharts Dispersão </option>
 						<option value="7"> ECharts Linhas </option>
 						<option value="8"> Morris Área </option>
@@ -81,23 +81,32 @@
 					</select>
 				</div>
 				
-				<div class="col-md-12 col-sm-12 col-xs-6 withDataOnly graph-option">
+				<div class="col-md-12 col-sm-12 col-xs-12 withDataOnly graph-option">
 					<p> <input type="checkbox" class="flat" checked /> Usar apenas pontos com dados. </p>
 				</div>
 				
-				<div class="col-md-12 col-sm-12 col-xs-6 includeControl graph-option">
+				<div class="col-md-12 col-sm-12 col-xs-12 includeControl graph-option">
 					<p> <input type="checkbox" class="flat" checked /> Incluir problemas de produção. </p>
 				</div>
 				
-				<div class="col-md-12 col-sm-12 col-xs-6 echartsY graph-option">
-					<p> <input type="checkbox" class="flat" checked /> Mostrar régua do eixo Y (EChartss). </p>
+				<div class="col-md-12 col-sm-12 col-xs-12 echartsY graph-option">
+					<p> <input type="checkbox" class="flat" checked /> Mostrar régua do eixo Y (ECharts). </p>
 				</div>
 				
-				<div class="col-md-12 col-sm-12 col-xs-6 morrisAngle graph-option">
+				<div class="col-md-12 col-sm-12 col-xs-12 morrisAngle graph-option">
 					<p> <input type="checkbox" class="flat" /> Categorias na diagonal (Morris). </p>
 				</div>
 				
-				<div class="col-md-12 col-sm-12 col-xs-6 export">
+				<div class="col-md-12 col-sm-12 col-xs-12">
+					<div class="zoom-content">
+						Zoom: 
+						<i class="fa fa-minus-circle less-zoom"></i>
+						<input type="text" name="zoom" class="form-control zoom num-fild" value="100" num-code="0" />
+						<i class="fa fa-plus-circle add-zoom"></i>
+					</div>
+				</div>
+
+				<div class="col-md-12 col-sm-12 col-xs-12 export">
 					<button type="button" class="btn btn-primary salvar" data-dismiss="modal" disabled><i class="fa fa-download"></i>Salvar Imagem</button>
 					<button type="button" class="btn btn-primary imprimir" data-dismiss="modal" disabled><i class="fa fa-print"></i>Imprimir</button>
 				</div>
@@ -112,29 +121,27 @@
 	<div id="graph-row1" class="row graph-row">
 		<div class="col-md-12 col-sm-12 col-xs-12 dashboard_graph">
 			<div class="row x_title">
-				<div class="col-md-7">
-					<h3><i class="fa fa-refresh refresh" title="Recarregar gráfico"></i>Produção por Equipamento <small class="producao_dados"></small></h3>
+				<div style="float: left; margin-bottom: 10px;">
+					<h3><i class="fa fa-refresh refresh" title="Recarregar gráfico"></i>Produção por Equipamento <small class="data_moment"></small></h3>
 				</div>
-				<div class="col-md-5">
-					<div style="float: right;">
-						<div id="" class="reportrange date-box">
-							<i class="glyphicon glyphicon-calendar fa fa-calendar"></i>
-							<span></span> <b class="caret"></b>
-						</div>
-						<span class="axis">Eixo X:</span>
-						<select class="category graph-select" style="height: 31px; width: auto;">
-							<option value="0"> Horas </option>
-							<option value="1" selected> Dias </option>
-							<option value="2"> Meses </option>
-							<option value="3"> Anos </option>
-						</select>
+				<div style="float: right;">
+					<div id="" class="reportrange date-box">
+						<i class="glyphicon glyphicon-calendar fa fa-calendar"></i>
+						<span></span> <b class="caret"></b>
 					</div>
+					<span class="axis">Eixo X:</span>
+					<select class="category graph-select" style="height: 31px; width: auto;">
+						<option value="0"> Horas </option>
+						<option value="1" selected> Dias </option>
+						<option value="2"> Meses </option>
+						<option value="3"> Anos </option>
+					</select>
 				</div>
 			</div>
 			
 			<div class="col-md-9 col-sm-8 col-xs-12">
 				<div class="graph-sets" style="width: 100%;">
-					<canvas id="canvas1" style="width: 100%; height: auto; display: none;"></canvas>
+					<canvas id="canvas1" style="display: none;"></canvas>
 					<h4 id="morris1_title" class="graph-title"></h4>
                     <div id="graph1" style="width:100%; height: 404px;"></div>
 				</div>
@@ -146,7 +153,7 @@
 					<div class="clearfix"></div>
 				</div>
 				
-				<div class="col-md-12 col-sm-12 col-xs-6">
+				<div class="col-md-12 col-sm-12 col-xs-12">
 					<ul class="series_list CAF_list"></ul>
 				</div>
 				
@@ -155,14 +162,14 @@
 					<div class="clearfix"></div>
 				</div>
 				
-				<div class="col-md-12 col-sm-12 col-xs-6">
+				<div class="col-md-12 col-sm-12 col-xs-12">
 					<select class="graphic_type graph-select" style="height: 31px; margin-bottom: 10px;">
 						<option value="0"> Área </option>
-						<option value="1" selected> Barras </option>
+						<option value="1"> Barras </option>
 						<option value="2"> Linhas </option>
 						<option value="3"> Radar </option>
 						<option value="4"> ECharts Área </option>
-						<option value="5"> ECharts Barras </option>
+						<option value="5" selected> ECharts Barras </option>
 						<option value="6"> ECharts Dispersão </option>
 						<option value="7"> ECharts Linhas </option>
 						<option value="8"> Morris Área </option>
@@ -171,23 +178,23 @@
 					</select>
 				</div>
 				
-				<div class="col-md-12 col-sm-12 col-xs-6 withDataOnly graph-option">
+				<div class="col-md-12 col-sm-12 col-xs-12 withDataOnly graph-option">
 					<p> <input type="checkbox" class="flat" checked /> Usar apenas pontos com dados. </p>
 				</div>
 				
-				<div class="col-md-12 col-sm-12 col-xs-6 includeControl graph-option">
+				<div class="col-md-12 col-sm-12 col-xs-12 includeControl graph-option">
 					<p> <input type="checkbox" class="flat" checked /> Incluir problemas de produção. </p>
 				</div>
 				
-				<div class="col-md-12 col-sm-12 col-xs-6 echartsY graph-option">
-					<p> <input type="checkbox" class="flat" checked /> Mostrar régua do eixo Y (EChartss). </p>
+				<div class="col-md-12 col-sm-12 col-xs-12 echartsY graph-option">
+					<p> <input type="checkbox" class="flat" checked /> Mostrar régua do eixo Y (ECharts). </p>
 				</div>
 				
-				<div class="col-md-12 col-sm-12 col-xs-6 morrisAngle graph-option">
+				<div class="col-md-12 col-sm-12 col-xs-12 morrisAngle graph-option">
 					<p> <input type="checkbox" class="flat" /> Categorias na diagonal (Morris). </p>
 				</div>
 				
-				<div class="col-md-12 col-sm-12 col-xs-6 export">
+				<div class="col-md-12 col-sm-12 col-xs-12 export">
 					<button type="button" class="btn btn-primary salvar" data-dismiss="modal" disabled><i class="fa fa-download"></i>Salvar Imagem</button>
 					<button type="button" class="btn btn-primary imprimir" data-dismiss="modal" disabled><i class="fa fa-print"></i>Imprimir</button>
 				</div>
@@ -197,6 +204,8 @@
 		</div>
 	</div>
     	
-	<!-- Produção Scripts -->
+	<!-- Produção Script -->
 	<script src="<?php echo base_url("system/utils/js/producao.js");?>"></script>
+	<!-- Series Loaders -->
+	<script src="<?php echo base_url("system/utils/js/Series/load_equipamentos.js");?>"></script>
 </div>

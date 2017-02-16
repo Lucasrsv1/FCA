@@ -1,3 +1,37 @@
+// Manipulate an array with only unique elements
+var UniqueArray = function () {
+	var items = [];
+
+	this.Push = function (value) {
+		if (items.indexOf(value) === -1)
+			items.push(value);
+	}
+
+	this.GetAll = () => { return items; }
+	this.Length = () => { return items.length; }
+	this.IndexOf = (searchElement, fromIndex = 0) => { return items.indexOf(searchElement, fromIndex); }
+	this.Sort = () => { items = items.sort(); }
+}
+
+// Add a left 0 in hours, minutes and seconds less than 10 
+function TimeLeft0 (value) {
+	return (value < 10) ? "0" + value : value;
+}
+
+// Return seconds formatted to D dias, HH:mm:ss
+function SecondsToMoment (seconds) {
+	var duration = moment.duration(seconds, "seconds");
+	var result = TimeLeft0(duration.hours()) + ":" + TimeLeft0(duration.minutes()) + ":" + TimeLeft0(duration.seconds());
+	if (duration.days() > 0)
+		result = duration.days() + ((duration.days() > 1) ? " dias, " : " dia, ") + result;
+	if (duration.months() > 0)
+		result = duration.months() + ((duration.months() > 1) ? " meses, " : " mês, ") + result;
+	if (duration.years() > 0)
+		result = duration.years() + ((duration.years() > 1) ? " anos, " : " ano, ") + result;
+	
+	return result;
+}
+
 // Usefull method for strings. Changes the substring specified by @start and @end for @replacement
 String.prototype.replaceSection = function (start, end, replacement) {
 	return this.substr(0, start) + replacement + this.substr(end);
@@ -92,7 +126,7 @@ function GetThemeColor (group, index, alpha) {
 var morrisColorsTheme = [];
 for (var grp = 0; grp < 5; grp++) {
 	for (var ind = 0; ind < 14; ind++ )
-		morrisColorsTheme[morrisColorsTheme.length] = GetThemeColor(grp, ind, 1);
+		morrisColorsTheme[morrisColorsTheme.length] = GetThemeColor(grp, ind, 0.75);
 }
 
 // ECharts library theme.
@@ -297,7 +331,8 @@ var GraphicTypes = {
 	MorrisDonut: 20,
 	EasyPie: 21, // Simple, one Series and one Value
 	Guage: 22,
-	ProgressBar: 23
+	ProgressBar: 23,
+	EChartsStackedBarWithTimeLine: 24,
 };
 
 // Stores all rendered graphics
@@ -344,6 +379,9 @@ function GetType (graphicType) {
 		case GraphicTypes.EChartsScatter:
 			type = "EChartsScatter";
 			break;
+		case GraphicTypes.EChartsStackedBarWithTimeLine:
+			type = "EChartsStackedBarWithTimeLine";
+			break;
 		default:
 			type = 'line';
 			break;
@@ -353,13 +391,18 @@ function GetType (graphicType) {
 }
 
 // Create the graph on the canvas or inside the div.
-function RenderGraphicMultiSeriesAndValues (graphicNum, title, seriesNames, labels, seriesValues, graphicType, prefix, morrisAngle, echartsY, secondaryData) {
-	"use strict";
-
+function RenderGraphicMultiSeriesAndValues (graphicNum, title, seriesNames, labels, seriesValues, graphicType, prefix, morrisAngle = 0, echartsY = true, secondaryData = null, zoom = 100, valuesLength = null, stackRealSeries = null, startDate = null, endDate = null, timeFormat = null, dateGroup = null, seriesColors = null) {
 	var backAlpha = 0.3;
 	if (graphicType === GraphicTypes.Line)
 		backAlpha = 0;
-
+	
+	// Config zoom
+	if (zoom < 100 || isNaN(zoom))
+		zoom = 1;
+	else
+		zoom /= 100;
+	
+	var graphWidth = $("#graph-row" + 0 + " .graph-sets").width() * zoom;
 	var type = GetType(graphicType);
 
 	// Clear canvas and div content
@@ -372,7 +415,7 @@ function RenderGraphicMultiSeriesAndValues (graphicNum, title, seriesNames, labe
 	var divGraph = document.getElementById('graph' + graphicNum);
 
 	// Is there any data?
-	if (labels.length === 0)
+	if (labels.length === 0 && ((stackRealSeries) ? stackRealSeries.Length : 0) === 0)
 		title += " (SEM DADOS)";
 
 	var datasets = [];
@@ -426,6 +469,7 @@ function RenderGraphicMultiSeriesAndValues (graphicNum, title, seriesNames, labe
 				fontSize: 14,
 				text: title
 			},
+			responsive: false,
 			tooltips: {
 				callbacks: {
 					label: function (tooltipItems, data) {
@@ -485,7 +529,9 @@ function RenderGraphicMultiSeriesAndValues (graphicNum, title, seriesNames, labe
 			};
 		}
 
-		graphics[graphicNum] = new Chart(canvas, {
+		canvas.width = graphWidth;
+		canvas.height = 404;
+		graphics[graphicNum] = new Chart(canvas.getContext("2d"), {
 			type: type,
 			data: {
 				labels: labels,
@@ -495,7 +541,7 @@ function RenderGraphicMultiSeriesAndValues (graphicNum, title, seriesNames, labe
 		});
 	} else if (type.indexOf("Morris") !== -1) {
 		$('#canvas' + graphicNum).hide();
-		$('#graph' + graphicNum).show();
+		$('#graph' + graphicNum).width(graphWidth).show();
 		$('#graph-row' + graphicNum).addClass('morris');
 		$('#morris' + graphicNum + '_title').text(title).show();
 
@@ -591,17 +637,32 @@ function RenderGraphicMultiSeriesAndValues (graphicNum, title, seriesNames, labe
 			$('#graph' + graphicNum).children('svg').attr('height', $('#graph' + graphicNum).children('svg').attr('height') * 1 + 15);
 	} else if (type.indexOf("ECharts") !== -1) {
 		$('#canvas' + graphicNum).hide();
-		$('#graph' + graphicNum).show();
+		$("#graph" + graphicNum).width(graphWidth).show();
 		$('#graph-row' + graphicNum).addClass('echarts');
 		$('#morris' + graphicNum + '_title').text(title).hide();
 
+		var line, size;
+		if (type === "EChartsStackedBarWithTimeLine") {
+			line = Math.round(graphWidth / 186);
+			size = 70 + 40 * ((stackRealSeries.Length() - line * 2 > 0) ? ((stackRealSeries.Length() - line * 2) / line) : 0);
+			var height = 404;
+			if (seriesNames.length > 3)
+				height += (seriesNames.length - 3) * 100;
+
+			divGraph.style.height = height + "px";
+			if (window.innerWidth >= 768)
+				$("#graph-row" + graphicNum + " .options").height(height);
+			else
+				$("#graph-row" + graphicNum + " .options").height("100%");
+		}	
+		
 		graphics[graphicNum] = echarts.init(divGraph, echartsTheme);
 
-		var t = 'line';
-		if (type === "EChartsBar")
+		var t = 'line', max = 0;
+		if (type === "EChartsBar" || type === "EChartsStackedBarWithTimeLine")
 			t = 'bar';
 
-		if (type !== "EChartsScatter") {
+		if (type !== "EChartsScatter" && type !== "EChartsStackedBarWithTimeLine") {
 			for (var i2 = 0; i2 < seriesNames.length; i2++) {
 				datasets[datasets.length] = {
 					name: seriesNames[i2],
@@ -625,7 +686,7 @@ function RenderGraphicMultiSeriesAndValues (graphicNum, title, seriesNames, labe
 					}
 				};
 			}
-		} else {
+		} else if (type === "EChartsScatter") {
 			var coordenadas;
 			for (var i3 = 0; i3 < seriesNames.length; i3++) {
 				coordenadas = [];
@@ -654,116 +715,164 @@ function RenderGraphicMultiSeriesAndValues (graphicNum, title, seriesNames, labe
 					}
 				};
 			}
+		} else {
+			var colors = {}, c = 0, bigger;
+			for (var i3 = 0; i3 < seriesNames.length; i3++) {
+				bigger = (function SUM(i) { if (i === seriesValues[seriesNames[i3]].length) return 1; return seriesValues[seriesNames[i3]][i][1] * 1 + SUM(i + 1); })(0)
+				if (bigger > max)
+					max = bigger;
+				
+				for (var e = 0; e < seriesValues[seriesNames[i3]].length; e++) {
+					var nome = seriesValues[seriesNames[i3]][e][0];
+					var duracao = [];
+					for (var p = 0; p < i3; p++)
+						duracao.push('-');
+					
+					duracao.push(seriesValues[seriesNames[i3]][e][1] * 1);
+
+					if (!colors[nome]) {
+						if (seriesColors[nome] !== "") {
+							colors[nome] = seriesColors[nome];
+						} else {
+							colors[nome] = morrisColorsTheme[c];
+							c = (c >= morrisColorsTheme.length) ? 0 : c + 1;
+						}
+					}
+
+					datasets[datasets.length] = {
+						name: nome, // Nome de um evento
+						type: t,
+						stack: "controle",
+						data: duracao, // Duração
+						itemStyle: {
+							normal: {
+								color: colors[nome]
+							}
+						}	
+					};
+				}	
+			}
 		}
 
-		var option = {
-			title: {
-				text: title
-			},
-			tooltip: {
-				trigger: 'axis',
-				formatter: function (params, ticket, callback) {
-					var append = "<span style='display: inline-block; margin-right: 5px; border-radius: 10px; width: 9px; height: 9px; background-color: " + params.color + "'></span> " + params.seriesName + "<br />";
-					if (typeof params.data !== "object")
-						append += params.name + "<br />" + prefix + ((!isNaN(params.data) && params.data !== null) ? params.data : "-");
-					else if (params.data.name)
-						append += params.data.name + ": " + ((!isNaN(params.data.value) && params.data.value !== null) ? params.data.value : "-");
-					else
-						append += params.data[0] + "<br />" + prefix + ((!isNaN(params.data[1]) && params.data[1] !== null) ? params.data[1] : "-");
-
-					var secondary;
-					if (secondaryData)
-						secondary = secondaryData[params.seriesName];
-
-					if (secondary) {
-						if (typeof params.data === "object" && !params.data.name)
-							secondary = secondary[params.data[0]];
+		var option;
+		if (type !== "EChartsStackedBarWithTimeLine") {
+			option = {
+				title: {
+					text: title
+				},
+				tooltip: {
+					trigger: 'axis',
+					formatter: function (params, ticket, callback) {
+						var append = "<span style='display: inline-block; margin-right: 5px; border-radius: 10px; width: 9px; height: 9px; background-color: " + params.color + "'></span> " + params.seriesName + "<br />";
+						if (typeof params.data !== "object")
+							append += params.name + "<br />" + prefix + ((!isNaN(params.data) && params.data !== null) ? params.data : "-");
+						else if (params.data.name)
+							append += params.data.name + ": " + ((!isNaN(params.data.value) && params.data.value !== null) ? params.data.value : "-");
 						else
-							secondary = secondary[params.name];
-					}
+							append += params.data[0] + "<br />" + prefix + ((!isNaN(params.data[1]) && params.data[1] !== null) ? params.data[1] : "-");
 
-					var groupsTotal = {};
-					var grp = "";
+						var secondary;
+						if (secondaryData)
+							secondary = secondaryData[params.seriesName];
 
-					if (secondary) {
-						for (var d = 0; d < secondary.length; d++) {
-							grp = secondary[d].group;
+						if (secondary) {
+							if (typeof params.data === "object" && !params.data.name)
+								secondary = secondary[params.data[0]];
+							else
+								secondary = secondary[params.name];
+						}
 
-							if (!groupsTotal[grp]) {
-								groupsTotal[grp] = {
-									showTotal: secondary[d].showTotal,
-									separator: (secondary[d].separator) ? secondary[d].separator : ": ",
-									total: 0,
-									content: ""
-								};
+						var groupsTotal = {};
+						var grp = "";
+
+						if (secondary) {
+							for (var d = 0; d < secondary.length; d++) {
+								grp = secondary[d].group;
+
+								if (!groupsTotal[grp]) {
+									groupsTotal[grp] = {
+										showTotal: secondary[d].showTotal,
+										separator: (secondary[d].separator) ? secondary[d].separator : ": ",
+										total: 0,
+										content: ""
+									};
+								}
+
+								groupsTotal[grp].total += secondary[d].value;
+								groupsTotal[grp].content += "<br />" + secondary[d].label + groupsTotal[grp].separator + secondary[d].value;
 							}
 
-							groupsTotal[grp].total += secondary[d].value;
-							groupsTotal[grp].content += "<br />" + secondary[d].label + groupsTotal[grp].separator + secondary[d].value;
+							for (var g in groupsTotal) {
+								append += "<br />";
+								append += "<br />" + g;
+								append += groupsTotal[g].content;
+								if (groupsTotal[g].showTotal)
+									append += "<br />Total" + groupsTotal[g].separator + Round(groupsTotal[g].total, 2);
+							}
 						}
 
-						for (var g in groupsTotal) {
-							append += "<br />";
-							append += "<br />" + g;
-							append += groupsTotal[g].content;
-							if (groupsTotal[g].showTotal)
-								append += "<br />Total" + groupsTotal[g].separator + Round(groupsTotal[g].total, 2);
-						}
+						return append;
 					}
-
-					return append;
-				}
-			},
-			legend: {
-				x: 'left',
-				y: 'bottom',
-				data: seriesNames
-			},
-			toolbox: {
-				show: true,
-				feature: {
-					mark: {
-						show: true
-					},
-					magicType: {
-						show: true,
-						title: {
-							line: 'Linhas',
-							bar: 'Barras',
-							stack: 'Pilha',
-							tiled: 'Mosaico'
+				},
+				legend: {
+					x: 'left',
+					y: 'bottom',
+					data: seriesNames
+				},
+				toolbox: {
+					show: true,
+					feature: {
+						mark: { show: true },
+						dataView: {
+							show: true,
+							readOnly: true,
+							title: "Dados",
+							lang: ["Dados em uso:", "Fechar", "Recarregar"]
 						},
-						type: ['line', 'bar', 'stack', 'tiled']
-					},
-					restore: {
-						show: true,
-						title: "Reiniciar"
-					},
-					saveAsImage: {
-						show: true,
-						title: "Salvar Imagem"
+						magicType: {
+							show: true,
+							title: {
+								line: 'Linhas',
+								bar: 'Barras',
+								stack: 'Pilha',
+								tiled: 'Mosaico'
+							},
+							type: ['line', 'bar', 'stack', 'tiled']
+						},
+						restore: {
+							show: true,
+							title: "Reiniciar"
+						},
+						saveAsImage: {
+							show: true,
+							title: "Salvar Imagem"
+						}
 					}
+				},
+				calculable: true,
+				xAxis: [{
+					type: 'category',
+					boundaryGap: false,
+					data: labels
+				}],
+				yAxis: [{
+					type: 'value'
+				}],
+				grid: {
+					x: 75,
+					x2: 75
+				},
+				series: datasets,
+				dataZoom: {
+					show: true,
+					realtime: true,
+					y: 36,
+					height: 20,
+					handleColor: "rgba(115, 135, 156, 0.8)",
+					fillerColor: "rgba(26, 187, 156, 0.2)"
 				}
-			},
-			calculable: true,
-			xAxis: [{
-				type: 'category',
-				boundaryGap: false,
-				data: labels
-			}],
-			yAxis: [{
-				type: 'value'
-			}],
-			series: datasets,
-			dataZoom: {
-				show: true,
-				realtime: true,
-				y: 36,
-				height: 20,
-				handleColor: "rgba(115, 135, 156, 0.8)",
-				fillerColor: "rgba(26, 187, 156, 0.2)"
-			}
-		};
+			};
+		}	
 
 		if (echartsY) {
 			option.tooltip.axisPointer = {
@@ -782,8 +891,128 @@ function RenderGraphicMultiSeriesAndValues (graphicNum, title, seriesNames, labe
 			option.toolbox.feature.magicType = {
 				show: false
 			};
+		} else if (type === "EChartsStackedBarWithTimeLine") {
+			// All Hours = 1800, All Days = 43200, All Months = 1296000, All Years = 15768000
+			var interval, fit = 0, total, numCalls;
+			switch (dateGroup) {
+				case 0:
+					fit = Math.floor(graphWidth / 113);
+					total = endDate.diff(startDate, 'hours');
+					interval = (total > fit) ? 1800 * Math.ceil(total / fit) : 1800;
+					numCalls = endDate.diff(startDate, 'seconds') / interval;
+					break;
+				case 1:
+					fit = Math.floor(graphWidth / 80);
+					total = endDate.diff(startDate, 'days');
+					interval = (total > fit) ? 43200 * Math.ceil(total / fit) : 43200;
+					numCalls = endDate.diff(startDate, 'seconds') / interval;
+					break;
+				case 2:
+					fit = Math.floor(graphWidth / 80);
+					total = endDate.diff(startDate, 'months');
+					interval = (total > fit) ? 1296000 * Math.ceil(total / fit) : (endDate.diff(startDate, 'seconds') > 1296000) ? 1296000 : endDate.diff(startDate, 'seconds') / 2;
+					numCalls = endDate.diff(startDate, 'seconds') / interval;
+					break;
+				case 3:
+					fit = Math.floor(graphWidth / 45);
+					total = endDate.diff(startDate, 'years');
+					interval = (total > fit) ? 15768000 * Math.ceil(total / fit) : (endDate.diff(startDate, 'seconds') > 15768000) ? 15768000 : endDate.diff(startDate, 'seconds') / 2;
+					numCalls = endDate.diff(startDate, 'seconds') / interval;
+					break;
+			}
+			
+			option = {
+				title: {
+					text: title
+				},
+				tooltip: {
+					trigger: 'item',
+					formatter: function (params, ticket, callback) {
+						var append = "<span style='display: inline-block; margin-right: 5px; border-radius: 10px; width: 9px; height: 9px; background-color: " + params.color + "'></span> " + params.seriesName + "<br />";
+						append += params.name + "<br />" + prefix + ((!isNaN(params.data) && params.data !== null) ? SecondsToMoment(params.data) : "-");
+						
+						var secondary, index = params.seriesIndex;
 
-			graphics[graphicNum].setOption(option);
+						for (var d = params.dataIndex; d > 0; d--)
+							index -= valuesLength[d - 1];
+
+						if (secondaryData)
+							if (secondaryData[params.name])	
+								secondary = secondaryData[params.name][index];
+						
+						if (secondary)
+							append += "<br />Início: " + secondary[0] + "<br />Fim: " + secondary[1];
+
+						return append;
+					}
+				},
+				legend: {
+					x: 'left',
+					y: 'bottom',
+					selectedMode: false,
+					data: stackRealSeries.GetAll()
+				},
+				toolbox: {
+					show: true,
+					feature: {
+						mark: { show: true },
+						dataView: {
+							show: true,
+							readOnly: true,
+							title: "Dados",
+							lang: ["Dados em uso:", "Fechar", "Recarregar"]
+						},
+						restore: {
+							show: true,
+							title: "Reiniciar"
+						},
+						saveAsImage: {
+							show: true,
+							title: "Salvar Imagem"
+						}
+					}
+				},
+				xAxis: [
+					{
+						type: 'value',
+						axisLabel: {
+							show: true,
+							formatter: function (value) {
+								if (value === 0)
+									this.key = false;
+								else
+									this.key = !this.key;
+								
+								var result = startDate.clone().add(value, 'seconds');
+
+								if (this.key)
+									return result.format((timeFormat === "MM/YYYY" || timeFormat == "YYYY") ? "DD/MM/YYYY" : timeFormat);
+								else
+									return "";	
+							}
+						},
+						interval: interval,
+						min: 0,
+						max: (numCalls - Math.floor(numCalls) <= 0.75 && numCalls - Math.floor(numCalls) >= 0.075) ? max + interval : max,
+						scale: true
+					}
+				],
+				yAxis: [
+					{
+						type: 'category',
+						axisLabel: {
+							rotate: 90
+						},
+						data: seriesNames
+					}
+				],
+				grid: {
+					x: 20,
+					x2: 0,
+					y2: size
+				},
+				series: datasets
+			};
 		} else {
 			for (var d = 0; d < datasets.length; d++) {
 				if (type === "EChartsLine") {
@@ -807,21 +1036,33 @@ function RenderGraphicMultiSeriesAndValues (graphicNum, title, seriesNames, labe
 					break;
 				}
 			}
-
-			graphics[graphicNum].setOption(option);
 		}
+		
+		graphics[graphicNum].setOption(option);
 	}
 
-	if (labels.length !== 0)
+	if (labels.length !== 0 || ((stackRealSeries) ? stackRealSeries.Length : 0) !== 0)
 		// Enable Save and Print buttons.
 		$('#graph-row' + graphicNum + ' .export button').removeAttr('disabled');
 
-	$('#graph-row' + graphicNum + ' .producao_dados').text(moment().format('DD/MM/YYYY HH:mm:ss'));
+	// Build scrollbar
+	setTimeout(function () {
+		$('#graph-row' + graphicNum + ' .graph-sets').mCustomScrollbar({
+			autoHideScrollbar: false,
+			axis: "x",
+			keyboard: { enable: true },
+			theme: 'minimal-dark',
+			scrollButtons: { enable: true },
+			mouseWheel: { preventDefault: true }
+		});
+	}, 500);	
+
+	$('#graph-row' + graphicNum + ' .data_moment').text(moment().format('DD/MM/YYYY HH:mm:ss'));
 	$('#graph-row' + graphicNum + ' .refresh').removeClass('fa-spin');	
 }
 
 // Clear the canvas and div from the graph-set.
-function ClearGraphicArea(graphicNum, checking = false) {
+function ClearGraphicArea (graphicNum, checking = false) {
 	var selected = SeriesPrefix(graphicNum);
 	if ($('#graph-row' + graphicNum + ' ul' + ((selected[0] === ".") ? selected : "." + selected) + '_list input:checked').length > 0 && checking)
 		return;
@@ -847,6 +1088,9 @@ function ClearGraphicArea(graphicNum, checking = false) {
 
 	// Disable Save and Print buttons.
 	$('#graph-row' + graphicNum + ' .export button').attr('disabled', '');
+
+	// Clear scrollbar	
+	$('#graph-row' + graphicNum + ' .graph-sets').mCustomScrollbar("destroy");
 
 	if (!checking) {
 		setTimeout(ClearGraphicArea, 500, graphicNum, true);
@@ -958,6 +1202,7 @@ $(document).ready(function () {
 	// Add scrollbar to the series <ul>
 	$('.series_list').mCustomScrollbar({
 		autoHideScrollbar: false,
+		keyboard: { enable: true },
 		theme: 'minimal-dark',
 		scrollButtons: { enable: true },
 		mouseWheel: { preventDefault: true }

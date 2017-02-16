@@ -1,5 +1,3 @@
-var base_url = "";
-
 (function($,sr){
     // debouncing function from John Hann
     // http://unscriptable.com/index.php/2009/03/20/debouncing-javascript-methods/
@@ -99,6 +97,7 @@ $(document).ready(function() {
 			nav = "md";
         }
 
+        $('.refresh').trigger('click');
         $BODY.toggleClass('nav-md nav-sm');
 
         setContentHeight();
@@ -177,7 +176,6 @@ $(document).ready(function() {
     });
 	
 	$('#fullscreen').click(function (e) {
-		var isFull;
 		if (window.innerHeight !== screen.height) {
 			if (document.documentElement.requestFullScreen)
 				document.documentElement.requestFullScreen();
@@ -185,8 +183,6 @@ $(document).ready(function() {
 				document.documentElement.mozRequestFullScreen();
 			else if (document.documentElement.webkitRequestFullScreen)
 				document.documentElement.webkitRequestFullScreen(Element.ALLOW_KEYBOARD_INPUT);
-			
-			isFull = true;
 		} else {
 			if (document.cancelFullScreen)
 				document.cancelFullScreen();
@@ -194,33 +190,37 @@ $(document).ready(function() {
 				document.mozCancelFullScreen();
 			else if (document.webkitCancelFullScreen)
 				document.webkitCancelFullScreen();
-			
-			isFull = false;
 		}
-		
-		$.ajax({
-            url: base_url + "login/preferencias",
-            type: "POST",
-            data: {
-				key: "fullscreen",
-                val: isFull
-			}, success: function(data) {
-				//alert(data);
-			}
-		});
     });
-	
+
+    var lastWidth = -1;
 	window.onresize = function () {
-		
+        var isFull;
+        if (lastWidth !== window.innerWidth) {
+            $('.refresh').trigger('click');
+            lastWidth = window.innerWidth;
+        }    
+
 		if (window.innerHeight === screen.height) {
 			$('#fullscreen').children('span').removeClass("glyphicon-fullscreen");
 			$('#fullscreen').children('span').addClass("glyphicon-resize-small");
-			$('#fullscreen').attr('data-original-title', 'Tela Normal');
+            $('#fullscreen').attr('data-original-title', 'Tela Normal');
+            isFull = true;
 		} else {
 			$('#fullscreen').children('span').removeClass("glyphicon-resize-small");
 			$('#fullscreen').children('span').addClass("glyphicon-fullscreen");
-			$('#fullscreen').attr('data-original-title', 'Tela Cheia');
-		}
+            $('#fullscreen').attr('data-original-title', 'Tela Cheia');
+            isFull = false;
+        }
+
+        $.ajax({
+            url: base_url + "login/preferencias",
+            type: "POST",
+            data: {
+                key: "fullscreen",
+                val: isFull
+            }
+        });
 	};
 	
 	window.onresize();
@@ -346,20 +346,3 @@ if (typeof NProgress != 'undefined') {
         NProgress.done();
     });
 }
-
-
-// Greenhouse Addition
-$(document).ready(function(e) {
-	$.mask.definitions['h'] = '[0123456789ABCDEFabcdef]';
-	
-	$(".telefones").mask("(99) 9999-9999");
-	$(".telefone_principal").mask("(99) 9999-9999");
-	$(".telefone_alternativo").mask("(99) 9999-9999");
-	$(".celular").mask("(99) 99999-9999");
-	$('.MAC').mask("hh:hh:hh:hh:hh:hh");
-	
-	$('input[type="number"]').keypress(function(e) {
-        if ((e.which !== 8 && e.which !== 0 && e.which !== 13 && e.which !== 44 && e.which !== 46 && (e.which < 48 || e.which > 57)))
-			return false;
-    });
-});

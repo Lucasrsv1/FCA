@@ -117,7 +117,7 @@ div.dataTables_filter label input {
 	border-color: #9f453b;
 }
 
-.noselect, .em_uso_toggle, canvas {
+.noselect, .em_uso_toggle, canvas, i {
 	-webkit-touch-callout: none;
 	-webkit-user-select: none;
 	-khtml-user-select: none;
@@ -179,7 +179,6 @@ ul.series_list {
 	text-transform: uppercase;
 	max-height: 200px;
 	padding: 0px 14px 0px 0px;
-	overflow: hidden;
 	margin-bottom: 3px;
 }
 
@@ -214,6 +213,18 @@ ul.series_list {
 
 .graph-row {
 	margin-bottom: 15px;
+	overflow: hidden;
+}
+
+.x_title {
+	margin-left: 0 !important;
+	margin-right: 0 !important;
+}
+
+@media (min-width: 768px) {
+	.options {
+		height: 439px;
+	}
 }
 
 .main_container {
@@ -247,6 +258,32 @@ ul.series_list {
 
 .date-box:hover {
 	cursor: pointer;
+}
+
+.zoom-content {
+	font-size: 14px;
+}
+
+.zoom-content i {
+	font-size: 27px;
+	vertical-align: middle;
+    margin: 0 5px;
+	color: #337ab7;
+}
+
+.zoom-content i:hover {
+	cursor: pointer;
+	color: #286090;
+}
+
+.zoom-content i:active {
+	color: #204d74;
+}
+
+.zoom-content .zoom {
+	width: 30%;
+    display: inline-block;
+	text-align: center;
 }
 
 @media print {
