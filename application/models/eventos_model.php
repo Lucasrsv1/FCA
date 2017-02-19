@@ -8,6 +8,7 @@
 		}
 		
 		function SelecionarTudo () {
+			$this->db->order_by("nome", "ASC");
 			$select = $this->db->get(self::TABELA);
 			return $select->result();
 		}

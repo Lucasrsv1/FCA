@@ -1,12 +1,33 @@
 function CreateGraphic (graphicNum) {
 	"use strict";
-	
+
 	// Spin loading indicator
 	$('#graph-row' + graphicNum + ' .refresh').addClass('fa-spin');
 
-	// Get Date Group for this graph is fixed.
+	// Get Date Group
+	var dateGroup = $('#graph-row' + graphicNum + ' .category').val() * 1;
+
 	// Set Date Group Format
-	var format = "YYYY-MM-DD";
+	var format = "", formatBR = "";
+	switch (dateGroup) {
+		case 0:
+			format = "YYYY-MM-DD HH";
+			formatBR = "DD/MM/YYYY HH:00";
+			break;
+		case 2:
+			format = "YYYY-MM";
+			formatBR = "MM/YYYY";
+			break;
+		case 3:
+			format = "YYYY";
+			formatBR = "YYYY";
+			break;
+		default:
+			dateGroup = 1;
+			format = "YYYY-MM-DD";
+			formatBR = "DD/MM/YYYY";
+			break;
+	}
 
 	// Time Range
 	var startDate = $('#graph-row' + graphicNum + ' .reportrange').data('daterangepicker').startDate;
@@ -46,42 +67,77 @@ function CreateGraphic (graphicNum) {
 
 	// Set Title [Time Range]
 	var title = "";
-	if (endDate.diff(startDate, 'days') > 0)
-		title = "Controle de Estado " + startDate.format("DD/MM/YYYY") + " - " + endDate.format("DD/MM/YYYY");
+	if (endDate.diff(startDate, dateGroups[dateGroup]) > 0)
+		title = "Controles " + startDate.format(formatBR) + " - " + endDate.format(formatBR);
 	else
-		title = "Controle de Estado " + startDate.format("DD/MM/YYYY");
+		title = "Controles " + startDate.format(formatBR);
+
+	// Add secondary data
+	var includeControl = $("#graph-row" + graphicNum + " .includeControl input[type='checkbox']").is(':checked');
+
+	// Use echarts cross-line tooltip?
+	var echartsY = $("#graph-row" + graphicNum + " .echartsY input[type='checkbox']").is(':checked');
+
+	// Show min and max in echarts?
+	var echartsMM = $("#graph-row" + graphicNum + " .echartsMM input[type='checkbox']").is(':checked');
+
+	// Show average in echarts?
+	var echartsAVG = $("#graph-row" + graphicNum + " .echartsAVG input[type='checkbox']").is(':checked');
+
+	// Morris xLabelAngle
+	var xLabelAngle = 0;
+	var morrisAngle = $("#graph-row" + graphicNum + " .morrisAngle input[type='checkbox']").is(':checked');
+	if (morrisAngle)
+		xLabelAngle = 60;
 
 	// Set categories
 	var categories = [];
+	var categoriesBR = [];
 	var startClone = startDate.clone();
-	while (endDate.diff(startClone, dateGroups[1]) > 0) {
+	while (endDate.diff(startClone, dateGroups[dateGroup]) > 0) {
 		categories[categories.length] = startClone.format(format);
-		startClone.add(1, dateGroups[1]);
+		categoriesBR[categoriesBR.length] = startClone.format(formatBR);
+		startClone.add(1, dateGroups[dateGroup]);
 	}
 	categories[categories.length] = startClone.format(format); // Add the last one
+	categoriesBR[categoriesBR.length] = startClone.format(formatBR); // Add the last one
 
+	// Get graphic type
+	var type = $('#graph-row' + graphicNum + ' .graphic_type').val() * 1;
+
+	// Get Values
 	var c;
 	var labels = [], labelsEnd = [];
-	for (c = 0; c < categories.length; c++) {
-		labels[c] = moment(categories[c]).format("YYYY-MM-DD HH:mm:ss");
-		labelsEnd[c] = moment(categories[c]).endOf(dateGroups[1]).add(1, 'seconds').format("YYYY-MM-DD HH:mm:ss");
+	if (dateGroup !== 3) {
+		for (c = 0; c < categories.length; c++) {
+			labels[c] = moment(categories[c]).format("YYYY-MM-DD HH:mm:ss");
+			labelsEnd[c] = moment(categories[c]).endOf(dateGroups[dateGroup]).add(1, 'seconds').format("YYYY-MM-DD HH:mm:ss");
+		}
+	} else {
+		for (c = 0; c < categories.length; c++) {
+			labels[c] = moment(categories[c], "YYYY").format("YYYY-MM-DD HH:mm:ss");
+			labelsEnd[c] = moment(categories[c], "YYYY").endOf(dateGroups[dateGroup]).add(1, 'seconds').format("YYYY-MM-DD HH:mm:ss");
+		}
 	}
-	
-	// Get Values
-	var values = {}, secondaryData = {}, lastEnd = {};
+
+	var values = {};
 	$.ajax({
-		url: base_url + "gerenciar/equipamentos/TodosEventos/",
+		url: base_url + "gerenciar/equipamentos/EventosAgrupados/",
 		type: "POST",
 		data: {
 			cafs: series,
 			labels: labels.join(", "),
 			labelsEnd: labelsEnd.join(", "),
+			labelsD: categories.join(", "),
+			labelsBR: categoriesBR.join(", "),
+			maus: false
 		},
 		success: function (data) {
 			var json = $.parseJSON(data);
 			var queryResult = json.data;
 
 			if (queryResult === "errorL") {
+				$('#graph-row' + graphicNum + ' .refresh').removeClass('fa-spin');
 				$("#msg_erro").html("Falha ao recuperar os dados da análise!<br />Sessão expirada! Por favor, faça login novamente.");
 				$('#erro').fadeIn('slow').addClass('open-message');
 				$('html, body').animate({ scrollTop: 0 }, 'slow');
@@ -90,77 +146,53 @@ function CreateGraphic (graphicNum) {
 			}
 
 			// Set the value prefix
-			var prefix = "Duração: ";
+			var prefix = "Duração total: ";
+			var realSeries = new UniqueArray();
 
-			// Handle returned values
-			for (var i = 0; i < series.length; i++) {
-				values[series[i]] = [];
-				secondaryData[series[i]] = [];
-			}
+			// Get secondary data.
+			var secondaryData = {};
 
-			var init, end, d, lastOne, add;
-			var nomes = new UniqueArray();
+			for (var row = 0; row < queryResult.length; row++)
+
+				for (var i = 0; i < realSeries.Length(); i++)
+					values[realSeries[i]] = [];
+
 			for (var row = 0; row < queryResult.length; row++) {
-				if (values[queryResult[row]['Series']].length === 0)
-					end = startDate.clone();
-				else
-					end = lastEnd[queryResult[row]['Series']];
-
-				init = moment(queryResult[row]['Inicio']);
-				if ((d = init.diff(end, 'seconds')) > 1) {
-					values[queryResult[row]['Series']].push(["Não Informado", d]);
-					secondaryData[queryResult[row]['Series']].push([end.format("DD/MM/YYYY HH:mm:ss"), init.format("DD/MM/YYYY HH:mm:ss")]);
-					lastEnd[queryResult[row]['Series']] = init;
-					nomes.Push("Não Informado");
+				realSeries.Push(queryResult[row]['nome']);
+				if (!values[queryResult[row]['nome']]) {
+					values[queryResult[row]['nome']] = [];
+					secondaryData[queryResult[row]['nome']] = {};
 				}
-
-				lastOne = values[queryResult[row]['Series']].length - 1;
-				if (lastOne >= 0)
-					add = values[queryResult[row]['Series']][lastOne][0] !== queryResult[row]['nome'];
-				else
-					add = true;
 				
-				if (add) {
-					values[queryResult[row]['Series']].push([queryResult[row]['nome'], queryResult[row]['Duracao'] * 1]);
-					secondaryData[queryResult[row]['Series']].push([moment(queryResult[row]['Inicio']).format("DD/MM/YYYY HH:mm:ss"), moment(queryResult[row]['Fim']).format("DD/MM/YYYY HH:mm:ss")]);
-					nomes.Push(queryResult[row]['nome']);
-				} else {
-					values[queryResult[row]['Series']][lastOne][1] += queryResult[row]['Duracao'] * 1;
-					secondaryData[queryResult[row]['Series']][lastOne][1] = moment(queryResult[row]['Fim']).format("DD/MM/YYYY HH:mm:ss");
+				var labelIndex = categories.indexOf(queryResult[row]['labelD']);
+				if (!values[queryResult[row]['nome']][labelIndex]) {
+					values[queryResult[row]['nome']][labelIndex] = 0;
+					secondaryData[queryResult[row]['nome']][categoriesBR[labelIndex]] = [];
 				}
 
-				lastEnd[queryResult[row]['Series']] = moment(queryResult[row]['Fim']);
+				values[queryResult[row]['nome']][labelIndex] += queryResult[row]['Duracao'] * 1;
+				secondaryData[queryResult[row]['nome']][categoriesBR[labelIndex]].push({
+					group: "LV_ONLY",
+					showTotal: false,
+					label: "Máquina(s):",
+					separator: "<br />",
+					value: queryResult[row]['Series']
+				});
 			}
+			
+			realSeries.Sort();
 
-			end = endDate.clone();
-			for (var i2 = 0; i2 < series.length; i2++) {
-				if (values[series[i2]].length === 0) {
-					values[series[i2]].push(["Não Informado", endDate.diff(startDate, 'seconds')]);
-					secondaryData[series[i2]].push([startDate.format("DD/MM/YYYY HH:mm:ss"), endDate.format("DD/MM/YYYY HH:mm:ss")]);
-					nomes.Push("Não Informado");
-					continue;
-				}
-
-				init = moment(lastEnd[series[i2]]);
-				if ((d = end.diff(init, 'seconds')) > 1) {
-					values[series[i2]].push(["Não Informado", d]);
-					secondaryData[series[i2]].push([init.format("DD/MM/YYYY HH:mm:ss"), end.format("DD/MM/YYYY HH:mm:ss")]);
-					nomes.Push("Não Informado");
+			// Set all labels without data to zero.
+			for (var v in values) {
+				for (var l = 0; l < categories.length; l++) {
+					if (!values[v][l])
+						values[v][l] = null;
 				}
 			}
-
-			var lengths = [];			
-			for (var v in values)
-				lengths.push(values[v].length);
-
-			nomes.Sort();
-			series = series.sort();
-
+			
 			// Get graph zoom
 			var zoom = $('#graph-row' + graphicNum + ' .zoom').val().replace(/%/g, "");
-
-			// Renderizar
-			RenderGraphicMultiSeriesAndValues(graphicNum, title, series, [], values, 24, prefix, 0, false, false, false, secondaryData, zoom, false, coresPorEvento, lengths, nomes, startDate, endDate);
+			RenderGraphicMultiSeriesAndValues(graphicNum, title, realSeries.GetAll(), categoriesBR, values, type, prefix, xLabelAngle, echartsY, echartsMM, echartsAVG, secondaryData, zoom, true, coresPorEvento);
 		},
 		error: function (data) {
 			$('#graph-row' + graphicNum + ' .refresh').removeClass('fa-spin');
@@ -197,6 +229,7 @@ function DefaultPrefix (graphicNum) {
 	graphicNum = graphicNum * 1;
 	switch (graphicNum) {
 		case 0:
+		case 1:
 			return "CAF";
 			break;
 		default:
@@ -206,7 +239,7 @@ function DefaultPrefix (graphicNum) {
 
 var coresPorEvento = {};
 
-function LoadedSeries (seriesName) {
+function LoadedSeries(seriesName) {
 	// After a series been loaded
 	if (seriesName === "equipamentos") {
 		$.ajax({

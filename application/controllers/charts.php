@@ -9,34 +9,31 @@
 			redirect('charts/producao');
 		}
 
-		function producao () {
+		function Load ($page, $title) {
 			$session_data = $this->session->userdata('logged_in');
 			if (!$session_data)
 				redirect('login');
 			
-			$data['title'] = "Gráficos de Produção";
+			$data['title'] = $title;
 			$data['session_data'] = $session_data;
 			$data['fullscreen'] = $this->session->userdata('fullscreen');
 			$data['nav'] = $this->session->userdata('nav');
 			
 			$this->template->write_view('menu', 'menu_view', $data);
-			$this->template->write_view('content', 'analises/producao');
+			$this->template->write_view('content', $page);
 			$this->template->render();
 		}
 		
+		function controles () {
+			self::Load("analises/controles", "Análise de Controles");
+		}
+
+		function producao () {
+			self::Load("analises/producao", "Análise de Produção");
+		}
+		
 		function status () {
-			$session_data = $this->session->userdata('logged_in');
-			if (!$session_data)
-				redirect('login');
-			
-			$data['title'] = "Gráficos de Controle de Estado";
-			$data['session_data'] = $session_data;
-			$data['fullscreen'] = $this->session->userdata('fullscreen');
-			$data['nav'] = $this->session->userdata('nav');
-			
-			$this->template->write_view('menu', 'menu_view', $data);
-			$this->template->write_view('content', 'analises/status');
-			$this->template->render();
+			self::Load("analises/status", "Análise de Estado");
 		}
 	}
 

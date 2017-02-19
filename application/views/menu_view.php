@@ -24,9 +24,9 @@
 			</li>
 			<li><a><i class="fa fa-bar-chart-o"></i> Estatísticas <span class="fa fa-chevron-down"></span></a>
 				<ul class="nav child_menu">
-					<li <?php echo linkUrl("charts/producao"); ?>Análise de Produção</a></li>
+					<li <?php echo linkUrl("charts/controles"); ?>Análise de Controles</a></li>
 					<li <?php echo linkUrl("charts/status"); ?>Análise de Estado</a></li>
-					<li <?php echo linkUrl("charts/analise"); ?>Análises Personalizadas</a></li>
+					<li <?php echo linkUrl("charts/producao"); ?>Análise de Produção</a></li>
 				</ul>
 			</li>
 			<li><a><i class="fa fa-cogs"></i>Gerenciar <span class="fa fa-chevron-down"></span></a>

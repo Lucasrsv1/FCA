@@ -37,7 +37,7 @@
                     <div id="graph0" style="width:100%; height: 404px;"></div>
 				</div>
 			</div>
-			<div class="col-md-3 col-sm-4 col-xs-12 bg-white">
+			<div class="col-md-3 col-sm-4 col-xs-12 bg-white options">
 				<div class="x_title">
 					<select class="series graph-select col-xs-7" style="font-weight: 600">
 						<option value="CAF" selected> CAFs </option>
@@ -93,6 +93,14 @@
 					<p> <input type="checkbox" class="flat" checked /> Mostrar régua do eixo Y (ECharts). </p>
 				</div>
 				
+				<div class="col-md-12 col-sm-12 col-xs-12 echartsMM graph-option">
+					<p> <input type="checkbox" class="flat" checked /> Mostrar mínimos e máximos (ECharts). </p>
+				</div>
+				
+				<div class="col-md-12 col-sm-12 col-xs-12 echartsAVG graph-option">
+					<p> <input type="checkbox" class="flat" checked /> Mostrar médias (ECharts). </p>
+				</div>
+				
 				<div class="col-md-12 col-sm-12 col-xs-12 morrisAngle graph-option">
 					<p> <input type="checkbox" class="flat" /> Categorias na diagonal (Morris). </p>
 				</div>
@@ -146,7 +154,7 @@
                     <div id="graph1" style="width:100%; height: 404px;"></div>
 				</div>
 			</div>
-			<div class="col-md-3 col-sm-4 col-xs-12 bg-white">
+			<div class="col-md-3 col-sm-4 col-xs-12 bg-white options">
 				<div class="x_title">
 					<h2>Equipamentos</h2>
 					<input class="form-control col-xs-5 small-search" name="search" type="text" placeholder="Pesquisa" />
@@ -188,6 +196,14 @@
 				
 				<div class="col-md-12 col-sm-12 col-xs-12 echartsY graph-option">
 					<p> <input type="checkbox" class="flat" checked /> Mostrar régua do eixo Y (ECharts). </p>
+				</div>
+				
+				<div class="col-md-12 col-sm-12 col-xs-12 echartsMM graph-option">
+					<p> <input type="checkbox" class="flat" checked /> Mostrar mínimos e máximos (ECharts). </p>
+				</div>
+				
+				<div class="col-md-12 col-sm-12 col-xs-12 echartsAVG graph-option">
+					<p> <input type="checkbox" class="flat" checked /> Mostrar médias (ECharts). </p>
 				</div>
 				
 				<div class="col-md-12 col-sm-12 col-xs-12 morrisAngle graph-option">

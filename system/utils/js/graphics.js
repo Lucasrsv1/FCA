@@ -8,6 +8,7 @@ var UniqueArray = function () {
 	}
 
 	this.GetAll = () => { return items; }
+	this.Get = (i) => { return items[i]; }
 	this.Length = () => { return items.length; }
 	this.IndexOf = (searchElement, fromIndex = 0) => { return items.indexOf(searchElement, fromIndex); }
 	this.Sort = () => { items = items.sort(); }
@@ -391,19 +392,25 @@ function GetType (graphicType) {
 }
 
 // Create the graph on the canvas or inside the div.
-function RenderGraphicMultiSeriesAndValues (graphicNum, title, seriesNames, labels, seriesValues, graphicType, prefix, morrisAngle = 0, echartsY = true, secondaryData = null, zoom = 100, valuesLength = null, stackRealSeries = null, startDate = null, endDate = null, timeFormat = null, dateGroup = null, seriesColors = null) {
+function RenderGraphicMultiSeriesAndValues(graphicNum, title, seriesNames, labels, seriesValues, graphicType, prefix, morrisAngle = 0, echartsY = true, echartsMM = true, echartsAVG = true, secondaryData = null, zoom = 100, durationFormat = false, seriesColors = null, valuesLength = null, stackRealSeries = null, startDate = null, endDate = null) {
+	var line, size;
 	var backAlpha = 0.3;
 	if (graphicType === GraphicTypes.Line)
 		backAlpha = 0;
 	
+	var seriesLength = seriesNames.length;
+	if (stackRealSeries)
+		seriesLength = stackRealSeries.Length();
+
+	var type = GetType(graphicType);
+	
 	// Config zoom
-	if (zoom < 100 || isNaN(zoom))
+	if (zoom < 100 || isNaN(zoom) || type === 'radar')
 		zoom = 1;
 	else
 		zoom /= 100;
 	
 	var graphWidth = $("#graph-row" + 0 + " .graph-sets").width() * zoom;
-	var type = GetType(graphicType);
 
 	// Clear canvas and div content
 	ClearGraphicArea(graphicNum);
@@ -428,13 +435,18 @@ function RenderGraphicMultiSeriesAndValues (graphicNum, title, seriesNames, labe
 
 		var colorGroup = 0, colorIndex = 0;
 		for (var i = 0; i < seriesNames.length; i++) {
+			if (seriesColors) {
+				if (!seriesColors[seriesNames[i]])
+					seriesColors[seriesNames[i]] = "rgba(120,120,120,0.7)";
+			}
+			
 			datasets[datasets.length] = {
 				label: seriesNames[i],
-				backgroundColor: GetThemeColor(colorGroup, colorIndex, backAlpha),
-				borderColor: GetThemeColor(colorGroup, colorIndex, 0.7),
+				backgroundColor: (seriesColors && graphicType !== GraphicTypes.Line) ? seriesColors[seriesNames[i]].replace("0.7", "0.3") : GetThemeColor(colorGroup, colorIndex, backAlpha),
+				borderColor: (seriesColors) ? seriesColors[seriesNames[i]] : GetThemeColor(colorGroup, colorIndex, 0.7),
 				borderWidth: 2,
-				pointBorderColor: GetThemeColor(colorGroup, colorIndex, 0.7),
-				pointBackgroundColor: GetThemeColor(colorGroup, colorIndex, 0.7),
+				pointBorderColor: (seriesColors) ? seriesColors[seriesNames[i]] : GetThemeColor(colorGroup, colorIndex, 0.7),
+				pointBackgroundColor: (seriesColors) ? seriesColors[seriesNames[i]] : GetThemeColor(colorGroup, colorIndex, 0.7),
 				pointHoverBackgroundColor: "#fff",
 				pointHoverBorderColor: "rgba(220,220,220,1)",
 				pointBorderWidth: 1,
@@ -486,7 +498,7 @@ function RenderGraphicMultiSeriesAndValues (graphicNum, title, seriesNames, labe
 						var groupsTotal = {};
 
 						var append = [serie], grp = "";
-						append.push(prefix + ((!isNaN(tooltipItems.yLabel) && tooltipItems.yLabel !== null) ? tooltipItems.yLabel : "-"));
+						append.push(prefix + ((!isNaN(tooltipItems.yLabel) && tooltipItems.yLabel !== null) ? ((durationFormat) ? SecondsToMoment(tooltipItems.yLabel * 1) : tooltipItems.yLabel) : "-"));
 						if (secondary) {
 							for (var d = 0; d < secondary.length; d++) {
 								grp = secondary[d].group;
@@ -501,13 +513,19 @@ function RenderGraphicMultiSeriesAndValues (graphicNum, title, seriesNames, labe
 								}
 
 								groupsTotal[grp].total += secondary[d].value;
-								groupsTotal[grp].content.push(secondary[d].label + groupsTotal[grp].separator + secondary[d].value);
+								var lines = (secondary[d].label + groupsTotal[grp].separator + secondary[d].value).split("<br />");
+								groupsTotal[grp].content = groupsTotal[grp].content.concat(lines);
 							}
 
 							for (var g in groupsTotal) {
 								append.push([]);
-								append.push(g);
-								append = append.concat(groupsTotal[g].content);
+								if (g === "LV_ONLY") {
+									append = append.concat(groupsTotal[g].content);
+								} else {
+									append.push(g);
+									append = append.concat(groupsTotal[g].content);
+								}
+								
 								if (groupsTotal[g].showTotal)
 									append.push("Total" + groupsTotal[g].separator + Round(groupsTotal[g].total, 2));
 							}
@@ -516,21 +534,29 @@ function RenderGraphicMultiSeriesAndValues (graphicNum, title, seriesNames, labe
 						return append;
 					}
 				}
+			},
+			scales: {
+				yAxes: [{
+					ticks: {
+						beginAtZero: true,
+						callback: function (value, index, values) {
+							return (durationFormat) ? SecondsToMoment(value) : value;
+						}
+					}
+				}]
 			}
 		};
 
-		if (type !== 'radar') {
-			chartjsOption.scales = {
-				yAxes: [{
-					ticks: {
-						beginAtZero: true
-					}
-				}]
-			};
-		}
+		if (type == 'radar')
+			chartjsOption.scales.yAxes = [];
+
+		line = Math.round(graphWidth / 186);
+		size = 10 + 30 * Math.ceil(seriesLength / line);
+		if (size < 30)
+			size = 30;
 
 		canvas.width = graphWidth;
-		canvas.height = 404;
+		canvas.height = 404 + size;
 		graphics[graphicNum] = new Chart(canvas.getContext("2d"), {
 			type: type,
 			data: {
@@ -561,6 +587,12 @@ function RenderGraphicMultiSeriesAndValues (graphicNum, title, seriesNames, labe
 		if (labels.length === 0) {
 			$('#graph-row' + graphicNum + ' .refresh').removeClass('fa-spin');
 			return;
+		}
+
+		var seriesColorsVector = [];
+		if (seriesColors) {
+			for (var s = 0; s < seriesNames.length; s++)
+				seriesColorsVector.push(seriesColors[seriesNames[s]]);
 		}
 
 		var morrisGraph = {
@@ -617,15 +649,19 @@ function RenderGraphicMultiSeriesAndValues (graphicNum, title, seriesNames, labe
 					return content;
 				}
 			},
+			yLabelFormat: function (y) {
+				return (durationFormat) ? SecondsToMoment(y) : y;
+			},
 			xLabelAngle: morrisAngle,
-			barColors: morrisColorsTheme,
-			lineColors: morrisColorsTheme,
+			barColors: (seriesColors) ? seriesColorsVector : morrisColorsTheme,
+			lineColors: (seriesColors) ? seriesColorsVector : morrisColorsTheme,
 			continuousLine: false,
+			behaveLikeLine: true,
 			pointSize: 2,
 			hideHover: 'auto',
 			resize: true
 		};
-
+		
 		if (type === "MorrisArea")
 			Morris.Area(morrisGraph);
 		else if (type === 'MorrisBar')
@@ -641,20 +677,20 @@ function RenderGraphicMultiSeriesAndValues (graphicNum, title, seriesNames, labe
 		$('#graph-row' + graphicNum).addClass('echarts');
 		$('#morris' + graphicNum + '_title').text(title).hide();
 
-		var line, size;
-		if (type === "EChartsStackedBarWithTimeLine") {
-			line = Math.round(graphWidth / 186);
-			size = 70 + 40 * ((stackRealSeries.Length() - line * 2 > 0) ? ((stackRealSeries.Length() - line * 2) / line) : 0);
-			var height = 404;
-			if (seriesNames.length > 3)
-				height += (seriesNames.length - 3) * 100;
+		line = Math.round(graphWidth / 186);
+		size = 10 + 30 * Math.ceil(seriesLength / line);
+		if (size < 30)
+			size = 30;	
+		
+		var height = 404 + size;
+		if (seriesNames.length > 3 && type === "EChartsStackedBarWithTimeLine")
+			height += (seriesNames.length - 3) * 100;
 
-			divGraph.style.height = height + "px";
-			if (window.innerWidth >= 768)
-				$("#graph-row" + graphicNum + " .options").height(height);
-			else
-				$("#graph-row" + graphicNum + " .options").height("100%");
-		}	
+		divGraph.style.height = height + "px";
+		if (window.innerWidth >= 768)
+			$("#graph-row" + graphicNum + " .options").height(height);
+		else
+			$("#graph-row" + graphicNum + " .options").height("100%");
 		
 		graphics[graphicNum] = echarts.init(divGraph, echartsTheme);
 
@@ -662,43 +698,67 @@ function RenderGraphicMultiSeriesAndValues (graphicNum, title, seriesNames, labe
 		if (type === "EChartsBar" || type === "EChartsStackedBarWithTimeLine")
 			t = 'bar';
 
-		if (type !== "EChartsScatter" && type !== "EChartsStackedBarWithTimeLine") {
-			for (var i2 = 0; i2 < seriesNames.length; i2++) {
-				datasets[datasets.length] = {
-					name: seriesNames[i2],
-					type: t,
-					data: (seriesValues[seriesNames[i2]]) ? seriesValues[seriesNames[i2]] : [],
-					smooth: true,
-					markPoint: {
-						data: [{
-							type: 'max',
-							name: 'Máximo'
-						}, {
-							type: 'min',
-							name: 'Mínimo'
-						}]
-					},
-					markLine: {
-						data: [{
-							type: 'average',
-							name: 'Média'
-						}]
-					}
-				};
-			}
-		} else if (type === "EChartsScatter") {
+		var colors = {};		
+		if (type !== "EChartsStackedBarWithTimeLine") {
 			var coordenadas;
-			for (var i3 = 0; i3 < seriesNames.length; i3++) {
-				coordenadas = [];
+			for (var i2 = 0; i2 < seriesNames.length; i2++) {
+				if (seriesColors) {
+					if (!colors[seriesNames[i2]]) {
+						if (seriesColors[seriesNames[i2]] !== "") {
+							colors[seriesNames[i2]] = seriesColors[seriesNames[i2]];
+						} else {
+							colors[seriesNames[i2]] = morrisColorsTheme[c];
+							c = (c >= morrisColorsTheme.length) ? 0 : c + 1;
+						}
+					}
+				}	
 
-				for (var x = 0; x < labels.length; x++)
-					coordenadas[coordenadas.length] = [labels[x], seriesValues[seriesNames[i3]][x]];
+				if (type !== "EChartsScatter") {
+					datasets[datasets.length] = {
+						name: seriesNames[i2],
+						type: t,
+						data: (seriesValues[seriesNames[i2]]) ? seriesValues[seriesNames[i2]] : [],
+						smooth: true
+					};
+					
+					var bigger = Math.max.apply(null, seriesValues[seriesNames[i2]]);
+					if (max < bigger && durationFormat)
+						max = bigger;
+				} else {
+					coordenadas = [];
 
-				datasets[datasets.length] = {
-					name: seriesNames[i3],
-					type: 'scatter',
-					data: coordenadas,
-					markPoint: {
+					for (var x = 0; x < labels.length; x++) {
+						coordenadas[coordenadas.length] = [labels[x], seriesValues[seriesNames[i2]][x]];
+						if (max < seriesValues[seriesNames[i2]][x] && durationFormat)
+							max = seriesValues[seriesNames[i2]][x];
+					}
+
+					datasets[datasets.length] = {
+						name: seriesNames[i2],
+						type: 'scatter',
+						data: coordenadas
+					};
+				}
+
+				if (seriesColors) {
+					datasets[datasets.length - 1].itemStyle = {
+						normal: {
+							color: colors[seriesNames[i2]]
+						}
+					};
+				}
+
+				if (echartsMM) {
+					datasets[datasets.length - 1].markPoint = {
+						itemStyle: {
+							normal: {
+								label: {
+									formatter: function (params, ticket, callback) {
+										return (durationFormat) ? params.name.substr(0, 3) + "." : params.value;
+									}
+								}
+							}	
+						},
 						data: [{
 							type: 'max',
 							name: 'Máximo'
@@ -706,17 +766,38 @@ function RenderGraphicMultiSeriesAndValues (graphicNum, title, seriesNames, labe
 							type: 'min',
 							name: 'Mínimo'
 						}]
-					},
-					markLine: {
+					};
+				}
+
+				if (echartsAVG) {
+					datasets[datasets.length - 1].markLine = {
+						itemStyle: {
+							normal: {
+								label: {
+									formatter: function (params, ticket, callback) {
+										return (durationFormat) ? SecondsToMoment(params.value) : params.value;
+									}
+								}
+							}	
+						},
 						data: [{
 							type: 'average',
 							name: 'Média'
 						}]
-					}
-				};
+					};
+				}
+			}
+
+			if (durationFormat) {
+				max = SecondsToMoment(max).length;
+				max = 91 + ((max - 15) / 2) * 13;
+				if (max < 80)
+					max = 80;
+			} else {
+				max = 80;
 			}
 		} else {
-			var colors = {}, c = 0, bigger;
+			var c = 0, bigger;
 			for (var i3 = 0; i3 < seriesNames.length; i3++) {
 				bigger = (function SUM(i) { if (i === seriesValues[seriesNames[i3]].length) return 1; return seriesValues[seriesNames[i3]][i][1] * 1 + SUM(i + 1); })(0)
 				if (bigger > max)
@@ -761,15 +842,15 @@ function RenderGraphicMultiSeriesAndValues (graphicNum, title, seriesNames, labe
 					text: title
 				},
 				tooltip: {
-					trigger: 'axis',
+					trigger: 'item',
 					formatter: function (params, ticket, callback) {
 						var append = "<span style='display: inline-block; margin-right: 5px; border-radius: 10px; width: 9px; height: 9px; background-color: " + params.color + "'></span> " + params.seriesName + "<br />";
 						if (typeof params.data !== "object")
-							append += params.name + "<br />" + prefix + ((!isNaN(params.data) && params.data !== null) ? params.data : "-");
+							append += params.name + "<br />" + prefix + ((!isNaN(params.data) && params.data !== null) ? ((durationFormat) ? SecondsToMoment(params.data) : params.data) : "-");
 						else if (params.data.name)
-							append += params.data.name + ": " + ((!isNaN(params.data.value) && params.data.value !== null) ? params.data.value : "-");
+							append += params.data.name + ": " + ((!isNaN(params.data.value) && params.data.value !== null) ? ((durationFormat) ? SecondsToMoment(params.data.value) : params.data.value) : "-");
 						else
-							append += params.data[0] + "<br />" + prefix + ((!isNaN(params.data[1]) && params.data[1] !== null) ? params.data[1] : "-");
+							append += params.data[0] + "<br />" + prefix + ((!isNaN(params.data[1]) && params.data[1] !== null) ? ((durationFormat) ? SecondsToMoment(params.data[1]) : params.data[1]) : "-");
 
 						var secondary;
 						if (secondaryData)
@@ -804,8 +885,11 @@ function RenderGraphicMultiSeriesAndValues (graphicNum, title, seriesNames, labe
 
 							for (var g in groupsTotal) {
 								append += "<br />";
-								append += "<br />" + g;
-								append += groupsTotal[g].content;
+								if (g === "LV_ONLY")
+									append += groupsTotal[g].content;
+								else
+									append += "<br />" + g + groupsTotal[g].content;
+								
 								if (groupsTotal[g].showTotal)
 									append += "<br />Total" + groupsTotal[g].separator + Round(groupsTotal[g].total, 2);
 							}
@@ -856,11 +940,17 @@ function RenderGraphicMultiSeriesAndValues (graphicNum, title, seriesNames, labe
 					data: labels
 				}],
 				yAxis: [{
-					type: 'value'
+					type: 'value',
+					axisLabel: {
+						formatter: function (value) {
+							return (durationFormat) ? SecondsToMoment(value) : value;
+						}
+					}
 				}],
 				grid: {
-					x: 75,
-					x2: 75
+					x: max,
+					x2: max,
+					y2: size
 				},
 				series: datasets,
 				dataZoom: {
@@ -894,32 +984,10 @@ function RenderGraphicMultiSeriesAndValues (graphicNum, title, seriesNames, labe
 		} else if (type === "EChartsStackedBarWithTimeLine") {
 			// All Hours = 1800, All Days = 43200, All Months = 1296000, All Years = 15768000
 			var interval, fit = 0, total, numCalls;
-			switch (dateGroup) {
-				case 0:
-					fit = Math.floor(graphWidth / 113);
-					total = endDate.diff(startDate, 'hours');
-					interval = (total > fit) ? 1800 * Math.ceil(total / fit) : 1800;
-					numCalls = endDate.diff(startDate, 'seconds') / interval;
-					break;
-				case 1:
-					fit = Math.floor(graphWidth / 80);
-					total = endDate.diff(startDate, 'days');
-					interval = (total > fit) ? 43200 * Math.ceil(total / fit) : 43200;
-					numCalls = endDate.diff(startDate, 'seconds') / interval;
-					break;
-				case 2:
-					fit = Math.floor(graphWidth / 80);
-					total = endDate.diff(startDate, 'months');
-					interval = (total > fit) ? 1296000 * Math.ceil(total / fit) : (endDate.diff(startDate, 'seconds') > 1296000) ? 1296000 : endDate.diff(startDate, 'seconds') / 2;
-					numCalls = endDate.diff(startDate, 'seconds') / interval;
-					break;
-				case 3:
-					fit = Math.floor(graphWidth / 45);
-					total = endDate.diff(startDate, 'years');
-					interval = (total > fit) ? 15768000 * Math.ceil(total / fit) : (endDate.diff(startDate, 'seconds') > 15768000) ? 15768000 : endDate.diff(startDate, 'seconds') / 2;
-					numCalls = endDate.diff(startDate, 'seconds') / interval;
-					break;
-			}
+			fit = Math.floor(graphWidth / 113);
+			total = endDate.diff(startDate, 'hours');
+			interval = (total > fit) ? 1800 * Math.ceil(total / fit) : 1800;
+			numCalls = endDate.diff(startDate, 'seconds') / interval;
 			
 			option = {
 				title: {
@@ -986,14 +1054,14 @@ function RenderGraphicMultiSeriesAndValues (graphicNum, title, seriesNames, labe
 								var result = startDate.clone().add(value, 'seconds');
 
 								if (this.key)
-									return result.format((timeFormat === "MM/YYYY" || timeFormat == "YYYY") ? "DD/MM/YYYY" : timeFormat);
+									return result.format("DD/MM/YYYY HH:00");
 								else
 									return "";	
 							}
 						},
 						interval: interval,
 						min: 0,
-						max: (numCalls - Math.floor(numCalls) <= 0.75 && numCalls - Math.floor(numCalls) >= 0.075) ? max + interval : max,
+						max: (numCalls - Math.floor(numCalls) <= 0.75 && numCalls - Math.floor(numCalls) >= 0.09) ? max + interval : max,
 						scale: true
 					}
 				],
@@ -1023,6 +1091,9 @@ function RenderGraphicMultiSeriesAndValues (graphicNum, title, seriesNames, labe
 							}
 						}
 					};
+
+					if (seriesColors)
+						datasets[d].itemStyle.normal.color = colors[datasets[d].name];
 				} else if (type === "EChartsArea") {
 					datasets[d].itemStyle = {
 						normal: {
@@ -1031,6 +1102,9 @@ function RenderGraphicMultiSeriesAndValues (graphicNum, title, seriesNames, labe
 							}
 						}
 					};
+
+					if (seriesColors)
+						datasets[d].itemStyle.normal.color = colors[datasets[d].name];
 				} else {
 					option.xAxis[0].boundaryGap = true;
 					break;

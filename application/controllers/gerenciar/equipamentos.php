@@ -215,7 +215,7 @@
 			echo json_encode(array('data' => $analise));
 		}
 		
-		function MausEventos () {
+		function EventosAgrupados () {
 			$analise = NULL;
 			$session_data = $this->session->userdata('logged_in');
 			if (!$session_data)
@@ -227,9 +227,10 @@
 				$labelsEnd = $this->input->post('labelsEnd');
 				$labelsD = $this->input->post('labelsD');
 				$labelsBR = $this->input->post('labelsBR');
+				$maus = $this->input->post('maus');
 				
 				$this->load->model('equipamentos_model');
-				$analise = $this->equipamentos_model->MausEventos($cafs, $labels, $labelsEnd, $labelsD, $labelsBR);
+				$analise = $this->equipamentos_model->EventosAgrupados($cafs, $labels, $labelsEnd, $labelsD, $labelsBR, $maus);
 			}
 			
 			echo json_encode(array('data' => $analise));

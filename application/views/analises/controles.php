@@ -4,22 +4,29 @@
 	
 	<div class="page-title">
 		<div class="title_left no_search">
-			<h3>Análise de Estados</h3>
+			<h3>Análise de Controles</h3>
 		</div>
 	</div>
-
+	
 	<div class="clearfix"></div>
 	<div id="graph-row0" class="row graph-row">
 		<div class="col-md-12 col-sm-12 col-xs-12 dashboard_graph">
 			<div class="row x_title">
 				<div style="float: left; margin-bottom: 10px;">
-					<h3><i class="fa fa-refresh refresh" title="Recarregar gráfico"></i>Estado dos Equipamentos <small class="data_moment"></small></h3>
+					<h3><i class="fa fa-refresh refresh" title="Recarregar gráfico"></i>Controles por Equipamento(s) <small class="data_moment"></small></h3>
 				</div>
 				<div style="float: right;">
 					<div id="" class="reportrange date-box">
 						<i class="glyphicon glyphicon-calendar fa fa-calendar"></i>
 						<span></span> <b class="caret"></b>
 					</div>
+					<span class="axis">Eixo X:</span>
+					<select class="category graph-select" style="height: 31px; width: auto;">
+						<option value="0"> Horas </option>
+						<option value="1" selected> Dias </option>
+						<option value="2"> Meses </option>
+						<option value="3"> Anos </option>
+					</select>
 				</div>
 			</div>
 			
@@ -54,7 +61,40 @@
 				</div>
 				
 				<div class="x_title" style="margin-top: 5px;">
+					<h2>Configurações</h2>
 					<div class="clearfix"></div>
+				</div>
+				
+				<div class="col-md-12 col-sm-12 col-xs-12">
+					<select class="graphic_type graph-select" style="height: 31px; margin-bottom: 10px;">
+						<option value="0"> Área </option>
+						<option value="1"> Barras </option>
+						<option value="2"> Linhas </option>
+						<option value="3"> Radar </option>
+						<option value="4"> ECharts Área </option>
+						<option value="5" selected> ECharts Barras </option>
+						<option value="6"> ECharts Dispersão </option>
+						<option value="7"> ECharts Linhas </option>
+						<option value="8"> Morris Área </option>
+						<option value="9"> Morris Barras </option>
+						<option value="10"> Morris Linhas </option>
+					</select>
+				</div>
+				
+				<div class="col-md-12 col-sm-12 col-xs-12 echartsY graph-option">
+					<p> <input type="checkbox" class="flat" checked /> Mostrar régua do eixo Y (ECharts). </p>
+				</div>
+				
+				<div class="col-md-12 col-sm-12 col-xs-12 echartsMM graph-option">
+					<p> <input type="checkbox" class="flat" checked /> Mostrar mínimos e máximos (ECharts). </p>
+				</div>
+				
+				<div class="col-md-12 col-sm-12 col-xs-12 echartsAVG graph-option">
+					<p> <input type="checkbox" class="flat" checked /> Mostrar médias (ECharts). </p>
+				</div>
+				
+				<div class="col-md-12 col-sm-12 col-xs-12 morrisAngle graph-option">
+					<p> <input type="checkbox" class="flat" /> Categorias na diagonal (Morris). </p>
 				</div>
 				
 				<div class="col-md-12 col-sm-12 col-xs-12">
@@ -75,9 +115,9 @@
 			<div class="clearfix"></div>
 		</div>
 	</div>
-    	
-	<!-- Status Scripts -->
-	<script src="<?php echo base_url("system/utils/js/status.js");?>"></script>
+	
+	<!-- Controles Script -->
+	<script src="<?php echo base_url("system/utils/js/controles.js");?>"></script>
 	<!-- Series Loaders -->
 	<script src="<?php echo base_url("system/utils/js/Series/load_equipamentos.js");?>"></script>
 </div>

@@ -81,6 +81,12 @@ function CreateGraphic (graphicNum) {
 	// Use echarts cross-line tooltip?
 	var echartsY = $("#graph-row" + graphicNum + " .echartsY input[type='checkbox']").is(':checked');
 
+	// Show min and max in echarts?
+	var echartsMM = $("#graph-row" + graphicNum + " .echartsMM input[type='checkbox']").is(':checked');
+
+	// Show average in echarts?
+	var echartsAVG = $("#graph-row" + graphicNum + " .echartsAVG input[type='checkbox']").is(':checked');
+
 	// Morris xLabelAngle
 	var xLabelAngle = 0;
 	var morrisAngle = $("#graph-row" + graphicNum + " .morrisAngle input[type='checkbox']").is(':checked');
@@ -230,14 +236,15 @@ function CreateGraphic (graphicNum) {
 				}
 
 				$.ajax({
-					url: base_url + "gerenciar/equipamentos/MausEventos/",
+					url: base_url + "gerenciar/equipamentos/EventosAgrupados/",
 					type: "POST",
 					data: {
 						cafs: series,
 						labels: labels.join(", "),
 						labelsEnd: labelsEnd.join(", "),
 						labelsD: categories.join(", "),
-						labelsBR: categoriesBR.join(", ")
+						labelsBR: categoriesBR.join(", "),
+						maus: true
 					},
 					success: function (data) {
 						var json = $.parseJSON(data);
@@ -298,7 +305,7 @@ function CreateGraphic (graphicNum) {
 
 						// Get graph zoom
 						var zoom = $('#graph-row' + graphicNum + ' .zoom').val().replace(/%/g, "");
-						RenderGraphicMultiSeriesAndValues(graphicNum, title, (objectSeries.length > 0) ? objectSeries : series, categoriesBR, values, type, prefix, xLabelAngle, echartsY, secondaryData, zoom);
+						RenderGraphicMultiSeriesAndValues(graphicNum, title, (objectSeries.length > 0) ? objectSeries : series, categoriesBR, values, type, prefix, xLabelAngle, echartsY, echartsMM, echartsAVG, secondaryData, zoom);
 					},
 					error: function (data) {
 						$("#msg_erro").html("Falha ao recuperar os dados secundários da análise!<br />Problema de comunicação com o banco de dados.");
@@ -307,13 +314,13 @@ function CreateGraphic (graphicNum) {
 
 						// Get graph zoom
 						var zoom = $('#graph-row' + graphicNum + ' .zoom').val().replace(/%/g, "");
-						RenderGraphicMultiSeriesAndValues(graphicNum, title, (objectSeries.length > 0) ? objectSeries : series, categoriesBR, values, type, prefix, xLabelAngle, echartsY, null, zoom);
+						RenderGraphicMultiSeriesAndValues(graphicNum, title, (objectSeries.length > 0) ? objectSeries : series, categoriesBR, values, type, prefix, xLabelAngle, echartsY, echartsMM, echartsAVG, null, zoom);
 					}
 				});
 			} else {
 				// Get graph zoom
 				var zoom = $('#graph-row' + graphicNum + ' .zoom').val().replace(/%/g, "");
-				RenderGraphicMultiSeriesAndValues(graphicNum, title, (objectSeries.length > 0) ? objectSeries : series, categoriesBR, values, type, prefix, xLabelAngle, echartsY, null, zoom);
+				RenderGraphicMultiSeriesAndValues(graphicNum, title, (objectSeries.length > 0) ? objectSeries : series, categoriesBR, values, type, prefix, xLabelAngle, echartsY, echartsMM, echartsAVG, null, zoom);
 			}
 		},
 		error: function (data) {
