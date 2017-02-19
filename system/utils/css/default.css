@@ -223,7 +223,7 @@ ul.series_list {
 
 @media (min-width: 768px) {
 	.options {
-		height: 439px;
+		min-height: 439px;
 	}
 }
 

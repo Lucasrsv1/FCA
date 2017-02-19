@@ -965,6 +965,7 @@ function RenderGraphicMultiSeriesAndValues(graphicNum, title, seriesNames, label
 		}	
 
 		if (echartsY) {
+			option.tooltip.trigger = "axis";
 			option.tooltip.axisPointer = {
 				type: 'cross',
 				lineStyle: {
