@@ -4,30 +4,8 @@ function CreateGraphic (graphicNum) {
 	// Spin loading indicator
 	$('#graph-row' + graphicNum + ' .refresh').addClass('fa-spin');
 
-	// Get Date Group
-	var dateGroup = $('#graph-row' + graphicNum + ' .category').val() * 1;
-
 	// Set Date Group Format
-	var format = "", formatBR = "";
-	switch (dateGroup) {
-		case 0:
-			format = "YYYY-MM-DD HH";
-			formatBR = "DD/MM/YYYY HH:00";
-			break;
-		case 2:
-			format = "YYYY-MM";
-			formatBR = "MM/YYYY";
-			break;
-		case 3:
-			format = "YYYY";
-			formatBR = "YYYY";
-			break;
-		default:
-			dateGroup = 1;
-			format = "YYYY-MM-DD";
-			formatBR = "DD/MM/YYYY";
-			break;
-	}
+	var format = "YYYY-MM-DD HH", formatBR = "DD/MM/YY HH:00";
 
 	// Time Range
 	var startDate = $('#graph-row' + graphicNum + ' .reportrange').data('daterangepicker').startDate;
@@ -67,10 +45,13 @@ function CreateGraphic (graphicNum) {
 
 	// Set Title [Time Range]
 	var title = "";
-	if (endDate.diff(startDate, dateGroups[dateGroup]) > 0)
-		title = "Controles " + startDate.format(formatBR) + " - " + endDate.format((dateGroup === 0) ? "DD/MM/YYYY HH:59" : formatBR);
+	if (endDate.diff(startDate, 'hours') > 0)
+		title = "Processos de Produção " + startDate.format(formatBR) + " - " + endDate.format("DD/MM/YYYY HH:59");
 	else
-		title = "Controles " + startDate.format(formatBR);
+		title = "Processos de Produção " + startDate.format(formatBR);
+
+	// Category, use labels only with data?
+	var withDataOnly = $("#graph-row" + graphicNum + " .withDataOnly input[type='checkbox']").is(':checked');
 
 	// Add secondary data
 	var includeControl = $("#graph-row" + graphicNum + " .includeControl input[type='checkbox']").is(':checked');
@@ -90,47 +71,34 @@ function CreateGraphic (graphicNum) {
 	if (morrisAngle)
 		xLabelAngle = 60;
 
-	// Set categories
-	var categories = [];
-	var categoriesBR = [];
-	var startClone = startDate.clone();
-	while (endDate.diff(startClone, dateGroups[dateGroup]) > 0) {
-		categories[categories.length] = startClone.format(format);
-		categoriesBR[categoriesBR.length] = startClone.format(formatBR);
-		startClone.add(1, dateGroups[dateGroup]);
-	}
-	categories[categories.length] = startClone.format(format); // Add the last one
-	categoriesBR[categoriesBR.length] = startClone.format(formatBR); // Add the last one
-
 	// Get graphic type
 	var type = $('#graph-row' + graphicNum + ' .graphic_type').val() * 1;
 
-	// Get Values
-	var c;
-	var labels = [], labelsEnd = [];
-	if (dateGroup !== 3) {
-		for (c = 0; c < categories.length; c++) {
-			labels[c] = moment(categories[c]).format("YYYY-MM-DD HH:mm:ss");
-			labelsEnd[c] = moment(categories[c]).endOf(dateGroups[dateGroup]).add(1, 'seconds').format("YYYY-MM-DD HH:mm:ss");
+	// Set categories
+	var categories = [];
+	var categoriesBR = [];
+	if (!withDataOnly) {
+		var startClone = startDate.clone();
+		while (endDate.diff(startClone, 'hours') > 0) {
+			categories[categories.length] = startClone.format(format);
+			categoriesBR[categoriesBR.length] = startClone.format(formatBR);
+			startClone.add(1, 'hours');
 		}
-	} else {
-		for (c = 0; c < categories.length; c++) {
-			labels[c] = moment(categories[c], "YYYY").format("YYYY-MM-DD HH:mm:ss");
-			labelsEnd[c] = moment(categories[c], "YYYY").endOf(dateGroups[dateGroup]).add(1, 'seconds').format("YYYY-MM-DD HH:mm:ss");
-		}
+		categories[categories.length] = startClone.format(format); // Add the last one
+		categoriesBR[categoriesBR.length] = startClone.format(formatBR); // Add the last one
 	}
 
+	// Get Values
 	var values = {};
 	$.ajax({
-		url: base_url + "gerenciar/equipamentos/EventosAgrupados/",
+		url: base_url + "gerenciar/equipamentos/AnaliseProducaoDuracao/",
 		type: "POST",
 		data: {
+			startDate: startDate.format(format),
+			endDate: endDate.format(format),
+			dateGroup: 0,
 			cafs: series,
-			labels: labels.join(", "),
-			labelsEnd: labelsEnd.join(", "),
-			labelsD: categories.join(", "),
-			labelsBR: categoriesBR.join(", "),
-			maus: false
+			duracao: true
 		},
 		success: function (data) {
 			var json = $.parseJSON(data);
@@ -145,38 +113,50 @@ function CreateGraphic (graphicNum) {
 				return;
 			}
 
-			// Set the value prefix
-			var prefix = "Duração total: ";
-			var realSeries = new UniqueArray();
-
 			// Get secondary data.
 			var secondaryData = {};
 
+			// Set the value prefix
+			var prefix = "Total: ";
+			var realSeries = ["Abastecer", "Desabastecer", "Duração", "Produzir"];
+
+			for (var r = 0; r < 4; r++){
+				values[realSeries[r]] = [];
+				secondaryData[realSeries[r]] = {};
+			}
+
+			var newCategories = [], newCategoriesBR = [], label, labelIndex = -1;
 			for (var row = 0; row < queryResult.length; row++) {
-				realSeries.Push(queryResult[row]['nome']);
-				if (!values[queryResult[row]['nome']]) {
-					values[queryResult[row]['nome']] = [];
-					secondaryData[queryResult[row]['nome']] = {};
-				}
-				
-				var labelIndex = categories.indexOf(queryResult[row]['labelD']);
-				if (!values[queryResult[row]['nome']][labelIndex]) {
-					values[queryResult[row]['nome']][labelIndex] = 0;
-					secondaryData[queryResult[row]['nome']][categoriesBR[labelIndex]] = [];
+				if (categories.length !== 0) {
+					// Use all Time_Range labels
+					label = queryResult[row]['LabelBR']
+					labelIndex = categoriesBR.indexOf(label);
+					console.log(categoriesBR, label);
+				} else {
+					// Use only with data labels
+					if ((labelIndex = newCategoriesBR.indexOf(queryResult[row]['LabelBR'])) === -1) {
+						labelIndex = newCategoriesBR.length;
+						label = queryResult[row]['LabelBR'];
+
+						newCategoriesBR[labelIndex] = label;
+						newCategories[labelIndex] = queryResult[row]['Label'];
+					}
 				}
 
-				values[queryResult[row]['nome']][labelIndex] += queryResult[row]['Duracao'] * 1;
-				secondaryData[queryResult[row]['nome']][categoriesBR[labelIndex]].push({
-					group: "LV_ONLY",
-					showTotal: false,
-					label: "Máquina(s):",
-					separator: "<br />",
-					value: queryResult[row]['Series']
-				});
+				for (var s = 0; s < 4; s++) {
+					if (!secondaryData[realSeries[s]][label])
+						secondaryData[realSeries[s]][label] = [];
+
+					values[realSeries[s]][labelIndex] = queryResult[row]['Value_' + s.toString()] * 1;
+					secondaryData[realSeries[s]][label].push({
+						group: "LV_ONLY",
+						showTotal: false,
+						label: "Máquina",
+						value: queryResult[row]['Series_GROUP']
+					});
+				}
 			}
 			
-			realSeries.Sort();
-
 			// Set all labels without data to zero.
 			for (var v in values) {
 				for (var l = 0; l < categories.length; l++) {
@@ -184,10 +164,15 @@ function CreateGraphic (graphicNum) {
 						values[v][l] = null;
 				}
 			}
+
+			if (categoriesBR.length === 0) {
+				categories = newCategories;
+				categoriesBR = newCategoriesBR;
+			}
 			
 			// Get graph zoom
 			var zoom = $('#graph-row' + graphicNum + ' .zoom').val().replace(/%/g, "");
-			RenderGraphicMultiSeriesAndValues(graphicNum, title, realSeries.GetAll(), categoriesBR, values, type, prefix, xLabelAngle, echartsY, echartsMM, echartsAVG, secondaryData, zoom, true, false, coresPorEvento);
+			RenderGraphicMultiSeriesAndValues(graphicNum, title, realSeries, categoriesBR, values, type, prefix, xLabelAngle, echartsY, echartsMM, echartsAVG, secondaryData, zoom, true, true);
 		},
 		error: function (data) {
 			$('#graph-row' + graphicNum + ' .refresh').removeClass('fa-spin');
@@ -229,34 +214,5 @@ function DefaultPrefix (graphicNum) {
 			break;
 		default:
 			return "series";
-	}
-}
-
-var coresPorEvento = {};
-
-function LoadedSeries(seriesName) {
-	// After a series been loaded
-	if (seriesName === "equipamentos") {
-		$.ajax({
-			url: base_url + "gerenciar/eventos/SelecionarTudo/",
-			success: function (data) {
-				var json = $.parseJSON(data);
-				var eventos = json.data;
-				for (var i = 0; i < eventos.length; i++)
-					coresPorEvento[eventos[i]['nome']] = (eventos[i]['cor'].length > 0) ? "rgba(" + eventos[i]['cor'] + ",0.7)" : "";
-
-				coresPorEvento['Não Informado'] = "rgba(120,120,120,0.7)";
-				if (eventos.length === 0) {
-					$("#msg_erro").html("Falha ao recuperar os tipos de eventos!<br />Sem dados de eventos!");
-					$('#erro').fadeIn('slow').addClass('open-message');
-					$('html, body').animate({ scrollTop: 0 }, 'slow');
-				}
-			},
-			error: function (data) {
-				$("#msg_erro").html("Falha ao recuperar os tipos de eventos!<br />Problema de comunicação com o banco de dados.");
-				$('#erro').fadeIn('slow').addClass('open-message');
-				$('html, body').animate({ scrollTop: 0 }, 'slow');
-			}
-		});
 	}
 }

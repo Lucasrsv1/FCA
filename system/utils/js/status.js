@@ -160,7 +160,7 @@ function CreateGraphic (graphicNum) {
 			var zoom = $('#graph-row' + graphicNum + ' .zoom').val().replace(/%/g, "");
 
 			// Renderizar
-			RenderGraphicMultiSeriesAndValues(graphicNum, title, series, [], values, 24, prefix, 0, false, false, false, secondaryData, zoom, false, coresPorEvento, lengths, nomes, startDate, endDate);
+			RenderGraphicMultiSeriesAndValues(graphicNum, title, series, [], values, 24, prefix, 0, false, false, false, secondaryData, zoom, false, false, coresPorEvento, lengths, nomes, startDate, endDate);
 		},
 		error: function (data) {
 			$('#graph-row' + graphicNum + ' .refresh').removeClass('fa-spin');

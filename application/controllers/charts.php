@@ -35,6 +35,10 @@
 		function status () {
 			self::Load("analises/status", "Análise de Estado");
 		}
+		
+		function tempos () {
+			self::Load("analises/tempos", "Análise de Duração");
+		}
 	}
 
 ?>

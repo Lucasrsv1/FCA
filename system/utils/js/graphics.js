@@ -15,12 +15,13 @@ var UniqueArray = function () {
 }
 
 // Add a left 0 in hours, minutes and seconds less than 10 
-function TimeLeft0 (value) {
-	return (value < 10) ? "0" + value : value;
+function TimeLeft0 (value, milliseconds) {
+	value = (value < 10) ? "0" + value : value;
+	return (milliseconds && value * 1 < 100) ? "0" + value : value;
 }
 
 // Return seconds formatted to D dias, HH:mm:ss
-function SecondsToMoment (seconds) {
+function SecondsToMoment (seconds, addMilliseconds) {
 	var duration = moment.duration(seconds, "seconds");
 	var result = TimeLeft0(duration.hours()) + ":" + TimeLeft0(duration.minutes()) + ":" + TimeLeft0(duration.seconds());
 	if (duration.days() > 0)
@@ -29,6 +30,9 @@ function SecondsToMoment (seconds) {
 		result = duration.months() + ((duration.months() > 1) ? " meses, " : " mês, ") + result;
 	if (duration.years() > 0)
 		result = duration.years() + ((duration.years() > 1) ? " anos, " : " ano, ") + result;
+	if (addMilliseconds === true) {
+		result += ":" + TimeLeft0(Round(duration.milliseconds()), true);
+	}
 	
 	return result;
 }
@@ -392,7 +396,7 @@ function GetType (graphicType) {
 }
 
 // Create the graph on the canvas or inside the div.
-function RenderGraphicMultiSeriesAndValues(graphicNum, title, seriesNames, labels, seriesValues, graphicType, prefix, morrisAngle = 0, echartsY = true, echartsMM = true, echartsAVG = true, secondaryData = null, zoom = 100, durationFormat = false, seriesColors = null, valuesLength = null, stackRealSeries = null, startDate = null, endDate = null) {
+function RenderGraphicMultiSeriesAndValues(graphicNum, title, seriesNames, labels, seriesValues, graphicType, prefix, morrisAngle = 0, echartsY = true, echartsMM = true, echartsAVG = true, secondaryData = null, zoom = 100, durationFormat = false, addMilliseconds = false, seriesColors = null, valuesLength = null, stackRealSeries = null, startDate = null, endDate = null) {
 	var line, size;
 	var backAlpha = 0.3;
 	if (graphicType === GraphicTypes.Line)
@@ -498,7 +502,7 @@ function RenderGraphicMultiSeriesAndValues(graphicNum, title, seriesNames, label
 						var groupsTotal = {};
 
 						var append = [serie], grp = "";
-						append.push(prefix + ((!isNaN(tooltipItems.yLabel) && tooltipItems.yLabel !== null) ? ((durationFormat) ? SecondsToMoment(tooltipItems.yLabel * 1) : tooltipItems.yLabel) : "-"));
+						append.push(prefix + ((!isNaN(tooltipItems.yLabel) && tooltipItems.yLabel !== null) ? ((durationFormat) ? SecondsToMoment(tooltipItems.yLabel * 1, addMilliseconds) : tooltipItems.yLabel) : "-"));
 						if (secondary) {
 							for (var d = 0; d < secondary.length; d++) {
 								grp = secondary[d].group;
@@ -540,7 +544,7 @@ function RenderGraphicMultiSeriesAndValues(graphicNum, title, seriesNames, label
 					ticks: {
 						beginAtZero: true,
 						callback: function (value, index, values) {
-							return (durationFormat) ? SecondsToMoment(value) : value;
+							return (durationFormat) ? SecondsToMoment(value, addMilliseconds) : value;
 						}
 					}
 				}]
@@ -650,7 +654,7 @@ function RenderGraphicMultiSeriesAndValues(graphicNum, title, seriesNames, label
 				}
 			},
 			yLabelFormat: function (y) {
-				return (durationFormat) ? SecondsToMoment(y) : y;
+				return (durationFormat) ? SecondsToMoment(y, addMilliseconds) : y;
 			},
 			xLabelAngle: morrisAngle,
 			barColors: (seriesColors) ? seriesColorsVector : morrisColorsTheme,
@@ -775,7 +779,7 @@ function RenderGraphicMultiSeriesAndValues(graphicNum, title, seriesNames, label
 							normal: {
 								label: {
 									formatter: function (params, ticket, callback) {
-										return (durationFormat) ? SecondsToMoment(params.value) : params.value;
+										return (durationFormat) ? SecondsToMoment(params.value, addMilliseconds) : params.value;
 									}
 								}
 							}	
@@ -789,7 +793,7 @@ function RenderGraphicMultiSeriesAndValues(graphicNum, title, seriesNames, label
 			}
 
 			if (durationFormat) {
-				max = SecondsToMoment(max).length;
+				max = SecondsToMoment(max, addMilliseconds).length;
 				max = 91 + ((max - 15) / 2) * 13;
 				if (max < 80)
 					max = 80;
@@ -846,11 +850,11 @@ function RenderGraphicMultiSeriesAndValues(graphicNum, title, seriesNames, label
 					formatter: function (params, ticket, callback) {
 						var append = "<span style='display: inline-block; margin-right: 5px; border-radius: 10px; width: 9px; height: 9px; background-color: " + params.color + "'></span> " + params.seriesName + "<br />";
 						if (typeof params.data !== "object")
-							append += params.name + "<br />" + prefix + ((!isNaN(params.data) && params.data !== null) ? ((durationFormat) ? SecondsToMoment(params.data) : params.data) : "-");
+							append += params.name + "<br />" + prefix + ((!isNaN(params.data) && params.data !== null) ? ((durationFormat) ? SecondsToMoment(params.data, addMilliseconds) : params.data) : "-");
 						else if (params.data.name)
-							append += params.data.name + ": " + ((!isNaN(params.data.value) && params.data.value !== null) ? ((durationFormat) ? SecondsToMoment(params.data.value) : params.data.value) : "-");
+							append += params.data.name + ": " + ((!isNaN(params.data.value) && params.data.value !== null) ? ((durationFormat) ? SecondsToMoment(params.data.value, addMilliseconds) : params.data.value) : "-");
 						else
-							append += params.data[0] + "<br />" + prefix + ((!isNaN(params.data[1]) && params.data[1] !== null) ? ((durationFormat) ? SecondsToMoment(params.data[1]) : params.data[1]) : "-");
+							append += params.data[0] + "<br />" + prefix + ((!isNaN(params.data[1]) && params.data[1] !== null) ? ((durationFormat) ? SecondsToMoment(params.data[1], addMilliseconds) : params.data[1]) : "-");
 
 						var secondary;
 						if (secondaryData)
@@ -943,7 +947,7 @@ function RenderGraphicMultiSeriesAndValues(graphicNum, title, seriesNames, label
 					type: 'value',
 					axisLabel: {
 						formatter: function (value) {
-							return (durationFormat) ? SecondsToMoment(value) : value;
+							return (durationFormat) ? SecondsToMoment(value, addMilliseconds) : value;
 						}
 					}
 				}],
@@ -998,7 +1002,7 @@ function RenderGraphicMultiSeriesAndValues(graphicNum, title, seriesNames, label
 					trigger: 'item',
 					formatter: function (params, ticket, callback) {
 						var append = "<span style='display: inline-block; margin-right: 5px; border-radius: 10px; width: 9px; height: 9px; background-color: " + params.color + "'></span> " + params.seriesName + "<br />";
-						append += params.name + "<br />" + prefix + ((!isNaN(params.data) && params.data !== null) ? SecondsToMoment(params.data) : "-");
+						append += params.name + "<br />" + prefix + ((!isNaN(params.data) && params.data !== null) ? SecondsToMoment(params.data, addMilliseconds) : "-");
 						
 						var secondary, index = params.seriesIndex;
 

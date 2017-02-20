@@ -111,7 +111,7 @@
 			return $this->db->affected_rows() > 0;
 		}
 		
-		function Producao ($startDate, $endDate, $dateGroup, $cafs) {
+		function ProducaoDuracao ($startDate, $endDate, $dateGroup, $cafs, $duracao = false) {
 			if (strlen($startDate) === 0|| strlen($endDate) === 0 || count($cafs) === 0)
 				return 'errorP';
 			
@@ -136,7 +136,12 @@
 			
 			$inCafs = implode("', '", $cafs);
 			
-			$select = $this->db->query("SELECT E.caf AS 'Series', DATE_FORMAT(P.data, '$format') AS 'Label', DATE_FORMAT(P.data, '$formatBR') AS 'LabelBR', COUNT(P.duracao) AS 'Value' FROM producao P INNER JOIN equipamentos E ON E.radio = P.equipamentos_radio WHERE E.caf IN ('$inCafs') AND DATE_FORMAT(P.data, '$format') BETWEEN '$startDate' AND '$endDate' GROUP BY 1, 2  ORDER BY 2 ASC");
+			if ($duracao === "true") {
+				$select = $this->db->query("SELECT E.caf AS 'Series_GROUP', DATE_FORMAT(P.data, '$format') AS 'Label', DATE_FORMAT(P.data, '$formatBR') AS 'LabelBR', AVG(P.abastecer) AS 'Value_0', AVG(P.desabastecer) AS 'Value_1', AVG(P.duracao) AS 'Value_2', AVG(P.produzir) AS 'Value_3' FROM producao P INNER JOIN equipamentos E ON E.radio = P.equipamentos_radio WHERE E.caf IN ('$inCafs') AND DATE_FORMAT(P.data, '$format') BETWEEN '$startDate' AND '$endDate' GROUP BY 1, 2 ORDER BY 1, 2 ASC");
+			} else {
+				$select = $this->db->query("SELECT E.caf AS 'Series', DATE_FORMAT(P.data, '$format') AS 'Label', DATE_FORMAT(P.data, '$formatBR') AS 'LabelBR', COUNT(P.duracao) AS 'Value' FROM producao P INNER JOIN equipamentos E ON E.radio = P.equipamentos_radio WHERE E.caf IN ('$inCafs') AND DATE_FORMAT(P.data, '$format') BETWEEN '$startDate' AND '$endDate' GROUP BY 1, 2  ORDER BY 2 ASC");
+			}
+
 			if ($select)
 				return $select->result();
 			else

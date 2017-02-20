@@ -180,7 +180,7 @@
 			echo json_encode($mensagem);
 		}
 		
-		function AnaliseProducao () {
+		function AnaliseProducaoDuracao () {
 			$analise = NULL;
 			$session_data = $this->session->userdata('logged_in');
 			if (!$session_data)
@@ -191,9 +191,10 @@
 				$endDate = $this->input->post('endDate');
 				$dateGroup = $this->input->post('dateGroup');
 				$cafs = $this->input->post('cafs');
+				$duracao = $this->input->post('duracao');
 				
 				$this->load->model('equipamentos_model');
-				$analise = $this->equipamentos_model->Producao($startDate, $endDate, $dateGroup, $cafs);
+				$analise = $this->equipamentos_model->ProducaoDuracao($startDate, $endDate, $dateGroup, $cafs, $duracao);
 			}
 			
 			echo json_encode(array('data' => $analise));

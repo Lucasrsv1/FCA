@@ -26,7 +26,7 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 	    <meta http-equiv="content-language" content="pt-br" />
 	    <meta http-equiv="pragma" content="no-cache" />
-	    <link rel="shortcut icon" href="<?php echo base_url("system/utils/Imagens/fca-logo.ico"); ?>" type="image/x-icon" />
+	    <link rel="shortcut icon" href="<?php echo base_url("system/utils/Imagens/fca-logo.png"); ?>" type="image/x-icon" />
     	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	    <meta name="description" content="Análise de produção">
 	    <meta name="author" content="Lucas Rassilan Vilanova">

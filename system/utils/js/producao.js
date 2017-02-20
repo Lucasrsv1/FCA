@@ -68,7 +68,7 @@ function CreateGraphic (graphicNum) {
 	// Set Title [Time Range]
 	var title = "";
 	if (endDate.diff(startDate, dateGroups[dateGroup]) > 0)
-		title = "Produção " + startDate.format(formatBR) + " - " + endDate.format(formatBR);
+		title = "Produção " + startDate.format(formatBR) + " - " + endDate.format((dateGroup === 0) ? "DD/MM/YYYY HH:59" : formatBR);
 	else
 		title = "Produção " + startDate.format(formatBR);
 
@@ -113,13 +113,14 @@ function CreateGraphic (graphicNum) {
 	// Get Values
 	var values = {};
 	$.ajax({
-		url: base_url + "gerenciar/equipamentos/AnaliseProducao/",
+		url: base_url + "gerenciar/equipamentos/AnaliseProducaoDuracao/",
 		type: "POST",
 		data: {
 			startDate: startDate.format(format),
 			endDate: endDate.format(format),
 			dateGroup: dateGroup,
-			cafs: series
+			cafs: series,
+			duracao: false
 		},
 		success: function (data) {
 			var json = $.parseJSON(data);

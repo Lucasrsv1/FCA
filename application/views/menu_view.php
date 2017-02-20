@@ -25,6 +25,7 @@
 			<li><a><i class="fa fa-bar-chart-o"></i> Estatísticas <span class="fa fa-chevron-down"></span></a>
 				<ul class="nav child_menu">
 					<li <?php echo linkUrl("charts/controles"); ?>Análise de Controles</a></li>
+					<li <?php echo linkUrl("charts/tempos"); ?>Análise de Duração</a></li>
 					<li <?php echo linkUrl("charts/status"); ?>Análise de Estado</a></li>
 					<li <?php echo linkUrl("charts/producao"); ?>Análise de Produção</a></li>
 				</ul>
